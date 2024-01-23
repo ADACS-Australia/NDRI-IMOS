@@ -1,6 +1,12 @@
 #ifndef __IMOS_READ_H__
 #define __IMOS_READ_H__
 
+/*
+    Read IMOS raw dat sound files
+    Inspired by:
+    https://github.com/aodn/data-services/blob/master/ANMN/acoustic/NL_load_logger_data_new.m
+*/
+
 #include "types.h"
 
 #define IMOS_NUM_HEADER_LINES         5	 // Number of header lines
