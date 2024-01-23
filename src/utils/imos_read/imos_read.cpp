@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <cstdlib>
+#include <sndfile.h>
+#include <cstring>
 
 #include "imos_read.h"
 
@@ -40,9 +42,11 @@ int imos_rawDatRead(const char* fileName,
     unsigned int durationSeconds = 0;
 
     sscanf(header[2], "Sample Rate %d Duration %d", &sampleRate, &durationSeconds);
-    printf("sampleRate = %d   durationSeconds = %d\n", sampleRate, durationSeconds);
-
+    
     samplesInFile = sampleRate * durationSeconds;
+
+    printf("samplesInFile = %d\n", samplesInFile);
+
     data = (int16_t *)malloc(samplesInFile * sizeof(int16_t));
     size_t samplesRead = fread(data, sizeof(U16), samplesInFile, file);
     printf("samplesRead = %d\n", (int)samplesRead);
@@ -51,7 +55,7 @@ int imos_rawDatRead(const char* fileName,
         perror("Error: file contains less sound data than expected from header");
         return 1;
     }
-
+    
     /* read footer / marker lines */
 
     i = 0;
@@ -70,6 +74,55 @@ int imos_rawDatRead(const char* fileName,
     numFooterLines = i;
 
     return(0);
+}
+
+int writeWAV(const char* fileName, 
+    unsigned int sampleRate,
+    unsigned int timeSeconds,
+    I16* data)
+{   
+    SNDFILE	*file ;
+	SF_INFO	sfinfo ;
+    memset (&sfinfo, 0, sizeof (sfinfo));
+
+    sfinfo.samplerate	= sampleRate;
+	sfinfo.frames		= (timeSeconds * sampleRate);
+	sfinfo.channels		= 1;
+	sfinfo.format		= (SF_FORMAT_WAV | SF_FORMAT_PCM_16);
+    
+    printf("in write, before open    ");
+    printf("sfinfo.frames = %d\n", (int)(sfinfo.frames));
+
+    if (! (file = sf_open(fileName, SFM_WRITE, &sfinfo)))
+	{	printf ("Error : Not able to open output file %s.\n", fileName) ;
+		return 1 ;
+	}
+
+    printf("in write, after open    ");
+    
+    printf("sfinfo.samplerate = %d\n", (int)(sfinfo.samplerate));
+    printf("sfinfo.frames = %d\n", (int)(sfinfo.frames));
+    printf("sfinfo.channels = %d\n", (int)(sfinfo.channels));
+    printf("sfinfo.channels * sfinfo.frames = %d\n", (int)(sfinfo.channels * sfinfo.frames));
+    printf("sampleRate = %d   durationSeconds = %d\n", sampleRate, timeSeconds);
+
+
+    printf("in write, fixed befor write_short    ");
+    sfinfo.frames		= (timeSeconds * sampleRate);
+	printf("sfinfo.frames = %d\n", (int)(sfinfo.frames));
+    printf("sfinfo.channels * sfinfo.frames = %d\n", (int)(sfinfo.channels * sfinfo.frames));    
+
+    sf_count_t wrFrames = sf_write_short(file, (short*)data, (sf_count_t)(sfinfo.channels * sfinfo.frames));
+    if ( wrFrames != (sfinfo.channels * sfinfo.frames))
+		{
+            printf("wrFrames = %d\n", (int)wrFrames);
+            puts(sf_strerror (file));
+        }
+
+	sf_close(file);
+	
+    printf("closed    sizeof(short)=%d\n", (int)sizeof(short));
+	return 0 ;
 }
 
 int main(int argc, const char ** argv)
@@ -97,6 +150,17 @@ int main(int argc, const char ** argv)
         numFooterLines,
         numSoundSamples,
         headerLines, footerLines,
+        sound);
+
+    unsigned int sampleRate = 0;
+    unsigned int durationSeconds = 0;
+
+    sscanf(headerLines[2], "Sample Rate %d Duration %d", &sampleRate, &durationSeconds);
+    printf("call write: sampleRate = %d   durationSeconds = %d\n", sampleRate, durationSeconds);
+
+    writeWAV("595A2725.WAV",
+        sampleRate,
+        durationSeconds,
         sound);
 
     exit(retval);
