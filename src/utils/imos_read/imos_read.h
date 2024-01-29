@@ -60,12 +60,17 @@ Data Validity - data is ok
 /* typedef struct imos_datHeader 
 */
 
-int imos_rawDatRead(const char* fileName,
+int imos_rawDatReadAll(const char* fileName,
                     int& headerLines,
                     int& footerLines,
                     unsigned int& samplesInFile,
                     char** header,
                     char** footer,
                     I16* data);
+
+int writeWAV(const char* fileName,
+    unsigned int sampleRate,
+    unsigned int timeSeconds,
+    I16* data);
 
 #endif // IMOS_READ_H
