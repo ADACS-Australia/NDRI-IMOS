@@ -12,9 +12,9 @@
 
     Returns number of individual sound samples as calculated from the header
 */
-int imos_rawDatReadHeader(const char* fileName,
-    int& numHeaderLines,
-    unsigned int& samplesInFile,
+int imos_rawDatReadHeader(const char *fileName,
+    int *numHeaderLines,
+    unsigned int *samplesInFile,
     char** header)
 {
     FILE *file = fopen(fileName, "r");
@@ -35,7 +35,7 @@ int imos_rawDatReadHeader(const char* fileName,
         }
     }
     fclose(file);
-    numHeaderLines = i;
+    *numHeaderLines = i;
     
     /* parse header - only minimal */
     unsigned int sampleRate = 0;
@@ -43,11 +43,11 @@ int imos_rawDatReadHeader(const char* fileName,
 
     sscanf(header[2], "Sample Rate %d Duration %d", &sampleRate, &durationSeconds);
     
-    samplesInFile = sampleRate * durationSeconds;
+    *samplesInFile = sampleRate * durationSeconds;
 
-    printf("samplesInFile = %d\n", samplesInFile);
+    printf("*samplesInFile = %d\n", *samplesInFile);
 
-    return(samplesInFile);
+    return((int)(*samplesInFile));
 }
 
 /*
@@ -56,9 +56,9 @@ int imos_rawDatReadHeader(const char* fileName,
     return 
 */
 int imos_rawDatReadAll(const char* fileName,
-    int& numHeaderLines,
-    int& numFooterLines,
-    unsigned int& samplesInFile,
+    int *numHeaderLines,
+    int *numFooterLines,
+    unsigned int *samplesInFile,
     char** header,
     char** footer,
     I16* data)
@@ -79,7 +79,7 @@ int imos_rawDatReadAll(const char* fileName,
             return 1;
         }
     }
-    numHeaderLines = i;
+    *numHeaderLines = i;
     
     /* parse header - only minimal */
     unsigned int sampleRate = 0;
@@ -87,14 +87,14 @@ int imos_rawDatReadAll(const char* fileName,
 
     sscanf(header[2], "Sample Rate %d Duration %d", &sampleRate, &durationSeconds);
     
-    samplesInFile = sampleRate * durationSeconds;
+    *samplesInFile = sampleRate * durationSeconds;
 
-    printf("samplesInFile = %d\n", samplesInFile);
+    printf("samplesInFile = %d\n", *samplesInFile);
 
     
-    size_t samplesRead = fread(data, sizeof(U16), samplesInFile, file);
-    printf("samplesRead = %d\n", (int)samplesRead);
-    if(samplesRead < samplesInFile) 
+    size_t samplesRead = fread(data, sizeof(U16), *samplesInFile, file);
+    printf("samplesRead = %lu\n", samplesRead);
+    if(samplesRead < (size_t)(*samplesInFile)) 
     {
         perror("Error: file contains less sound data than expected from header");
         return 1;
@@ -115,7 +115,7 @@ int imos_rawDatReadAll(const char* fileName,
         perror("Error: Unexpected error or end of file while reading footer");
         return 1;
     }
-    numFooterLines = i;
+    *numFooterLines = i;
 
     return(0);
 }
@@ -219,10 +219,12 @@ int main(int argc, const char ** argv)
 {
     int numHeaderLines = 0;
     int numFooterLines = 0;
-    unsigned int numSoundSamples = 0;  
+    int numSoundSamples = 0;  
     char* headerLines[5];
     char* footerLines[6];
+    int retval = -1; /* assume failed */
     int i;
+
     for(i=0; i<5; i++)
     {
         headerLines[i] = (char*)malloc(IMOS_HEADER_LINE_SIZE_MAX * sizeof(char));
@@ -236,18 +238,22 @@ int main(int argc, const char ** argv)
     /* /home/martin/src/CIDS/ADACS2/IMOS/NDRI-IMOS/src/utils/imos_read/595A2725.DAT */
 
     if(imos_rawDatReadHeader("/home/martin/src/CIDS/ADACS2/IMOS/NDRI-IMOS/src/utils/imos_read/595A2725.DAT", 
-        numHeaderLines, numSamplesHeader, headerLines) < 0)
+        &numHeaderLines, &numSamplesHeader, headerLines) < 0)
     {
         printf("ERROR: imos_rawDatReadHeader() failed!\n");
         exit(1);
     }
 
-    I16* sound = (I16*)malloc(numSamplesHeader * sizeof(int16_t));
+    I16* sound = (I16*)malloc(numSamplesHeader * sizeof(I16));
     size_t allSize = malloc_usable_size((void*)sound);
     printf("allocated size = %d\n", (int)allSize);
 
-    int retval = imos_rawDatRead("595A2725.DAT", numSoundSamples, headerLines, sound);
-    
+     numSoundSamples = imos_rawDatRead("595A2725.DAT", numSamplesHeader, headerLines, sound);    
+    if(numSoundSamples == numSamplesHeader)
+    {
+        retval = 0;
+    }
+
     allSize = malloc_usable_size((void*)sound);
     printf("in main() allocated size = %d\n", (int)allSize);
     
