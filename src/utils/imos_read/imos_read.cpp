@@ -33,8 +33,8 @@ int imos_rawDatReadHeader(const char* fileName,
             perror("Error: Unexpected error or end of file while reading header");
             return -1;
         }
-        fclose(file);            
     }
+    fclose(file);
     numHeaderLines = i;
     
     /* parse header - only minimal */
@@ -233,7 +233,10 @@ int main(int argc, const char ** argv)
     }
     
     unsigned int numSamplesHeader = 0;
-    if(imos_rawDatReadHeader("595A2725.DAT", numHeaderLines, numSamplesHeader, headerLines) < 0)
+    /* /home/martin/src/CIDS/ADACS2/IMOS/NDRI-IMOS/src/utils/imos_read/595A2725.DAT */
+
+    if(imos_rawDatReadHeader("/home/martin/src/CIDS/ADACS2/IMOS/NDRI-IMOS/src/utils/imos_read/595A2725.DAT", 
+        numHeaderLines, numSamplesHeader, headerLines) < 0)
     {
         printf("ERROR: imos_rawDatReadHeader() failed!\n");
         exit(1);
