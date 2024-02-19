@@ -4,13 +4,19 @@ import re
 import os
 import numpy as np
 import sys
+import wave
 
 if __name__ == "__main__":
 
+    datFileName = sys.argv[1]
+    if not os.path.exists(datFileName):
+        print(f'File {datFileName} not found!')
+        exit(-1)            
+        
     header = []
     footer = []
     # with open('54842511.DAT', 'rb') as file:
-    with open(sys.argv[1], 'rb') as file:
+    with open(datFileName, 'rb') as file:
         # read the header
         for lineNum in range(1,6):
             line = file.readline()
@@ -80,4 +86,19 @@ if __name__ == "__main__":
 
         file.close()
         
+        # write wav file
         
+        # Generate the new filename with the .wav suffix
+        if datFileName.endswith(".DAT"):
+            wavFileName = datFileName.rsplit('.', 1)[0] + '.wav'
+        else:
+            wavFileName = datFileName + '.wav'
+
+        # Open the WAV file
+        with wave.open(wavFileName, 'w') as wavFile:
+            # Set the parameters of the output file
+            wavFile.setnchannels(1) # mono
+            wavFile.setsampwidth(2) # in bytes, 16bit samples
+            wavFile.setframerate(sampleRate)
+            wavFile.setnframes(binData.size)
+            wavFile.writeframes(binData.tobytes())
