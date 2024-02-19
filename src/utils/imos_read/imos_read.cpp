@@ -199,9 +199,6 @@ int writeWAV(const char* fileName,
 	printf("sfinfo.frames = %d\n", (int)(sfinfo.frames));
     printf("sfinfo.channels * sfinfo.frames = %d\n", (int)(sfinfo.channels * sfinfo.frames));    
 
-    size_t allSize = malloc_usable_size((void*)data);
-    printf("in writeWAW() allocated size = %d\n", (int)allSize);
-
     sf_count_t wrFrames = sf_write_short(file, (short*)data, (sf_count_t)(sfinfo.channels * sfinfo.frames));
     if ( wrFrames != (sfinfo.channels * sfinfo.frames))
 		{
@@ -237,7 +234,8 @@ int main(int argc, const char ** argv)
     unsigned int numSamplesHeader = 0;
     /* /home/martin/src/CIDS/ADACS2/IMOS/NDRI-IMOS/src/utils/imos_read/595A2725.DAT */
 
-    if(imos_rawDatReadHeader("/home/martin/src/CIDS/ADACS2/IMOS/NDRI-IMOS/src/utils/imos_read/595A2725.DAT", 
+    // if(imos_rawDatReadHeader("/home/martin/src/CIDS/ADACS2/IMOS/NDRI-IMOS/src/utils/imos_read/595A2725.DAT",
+    if(imos_rawDatReadHeader("54842511.DAT",
         &numHeaderLines, &numSamplesHeader, headerLines) < 0)
     {
         printf("ERROR: imos_rawDatReadHeader() failed!\n");
@@ -248,14 +246,14 @@ int main(int argc, const char ** argv)
     size_t allSize = malloc_usable_size((void*)sound);
     printf("allocated size = %d\n", (int)allSize);
 
-     numSoundSamples = imos_rawDatRead("595A2725.DAT", numSamplesHeader, headerLines, sound);    
+     numSoundSamples = imos_rawDatRead("54842511.DAT", numSamplesHeader, headerLines, sound);
     if(numSoundSamples == numSamplesHeader)
     {
         retval = 0;
     }
 
-    allSize = malloc_usable_size((void*)sound);
-    printf("in main() allocated size = %d\n", (int)allSize);
+    #allSize = malloc_usable_size((void*)sound);
+    #printf("in main() allocated size = %d\n", (int)allSize);
     
     unsigned int sampleRate = 0;
     unsigned int durationSeconds = 0;
@@ -263,7 +261,7 @@ int main(int argc, const char ** argv)
     sscanf(headerLines[2], "Sample Rate %d Duration %d", &sampleRate, &durationSeconds);
     printf("call write: sampleRate = %d   durationSeconds = %d\n", sampleRate, durationSeconds);
 
-    writeWAV("595A2725.WAV",
+    writeWAV("54842511.WAV",
         sampleRate,
         durationSeconds,
         sound);
