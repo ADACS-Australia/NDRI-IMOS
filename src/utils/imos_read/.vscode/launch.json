@@ -27,7 +27,24 @@
                     "ignoreFailures": true
                 }
             ]
+        },
+        {
+            "name": "Python: Module pytest",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "justMyCode": true
+        },
+        {
+            "name": "Python debug imos_read.py 56949652.DAT",
+            "type": "python",
+            "request": "launch",
+            "program": "imos_read.py",
+            "args": [
+                //"--debug",
+                "56949652.DAT"
+            ],
+            "console": "integratedTerminal"
         }
-
     ]
 }
