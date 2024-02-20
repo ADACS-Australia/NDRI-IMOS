@@ -6,6 +6,19 @@ import numpy as np
 import sys
 import wave
 
+# Record Header-       E24 set# 3444
+# Schedule 1 2016/10/02 00:00:01 - 48836
+# Sample Rate 06000 Duration 0000000300
+# Filter 0 C0=1 C1=0 LF=008 HF=02800 PG=010 G=001
+# Filter 1 C2=0 C3=0 LF=008 HF=05000 PG=001 G=001
+#
+# Record Marker
+# First Data-2016/10/02 00:00:01 - 49926
+# Finalised -2016/10/02 00:05:09 - 01096
+# Data Validity - data is ok 
+# Data to RAM = 0
+# Data block size = 0065536
+
 if __name__ == "__main__":
 
     datFileName = sys.argv[1]
@@ -36,6 +49,10 @@ if __name__ == "__main__":
         
         numSamplesHeader = sampleRate * durationSeconds
         print(f'numSamplesHeader is {numSamplesHeader}')
+        
+        # !@#$%^&* TODO: so far assuming single channel only
+        # but there could be more (see C0=1 C1=0 C2=0 C3=0 in the header.
+        # and the matlab code)
         
         # read the nominal chunk of sound record as numpy array of int16
         binData = np.frombuffer(file.read(numSamplesHeader *
