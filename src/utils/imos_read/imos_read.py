@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # with open('54842511.DAT', 'rb') as file:
     with open(datFileName, 'rb') as file:
         # read the header
-        for lineNum in range(1,6):
+        for lineNum in range(0, 5):
             line = file.readline()
             print(f'{lineNum} {line}')
             header.append(line.decode("utf-8"))
@@ -59,7 +59,7 @@ if __name__ == "__main__":
                                           np.dtype(np.int16).itemsize),
                                 dtype=np.int16)
         print(f'Size of read bin data numpy array is {binData.size}')
-        
+
         # store the position where the binary data tail begins
         binDataTailPos = file.tell()
         print(f'>>> file position after bin data as per header is {binDataTailPos}')
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         
         # read the extra sound record as numpy array of int16
         extraSamplesInBinDataTail = (footerPos - 1) // 2
-        binDataTail = np.frombuffer(file.read(extraSamplesInBinDataTail * 
+        binDataTail = np.frombuffer(file.read(extraSamplesInBinDataTail *
                                               np.dtype(np.int16).itemsize),
                                     dtype=np.int16)
         print(f'Size of extra bin data tail numpy array is {binDataTail.size}')
@@ -96,10 +96,10 @@ if __name__ == "__main__":
         print(f'>>> file position is {pos}')
         
         # read the footer ("record marker")
-        for lineNum in range(1,5):
+        for lineNum in range(0, 4):
             line = file.readline()
             print(f'{lineNum} {line}')
-            footer.append(line.decode("utf-8"))               
+            footer.append(line.decode("utf-8"))            
 
         file.close()
         
