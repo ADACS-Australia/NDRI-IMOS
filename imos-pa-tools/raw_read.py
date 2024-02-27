@@ -66,8 +66,9 @@ def readDatHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
         isCh0 = int(match.group(1))
         isCh1 = int(match.group(2))
     else:
-        log.debug('Channel 0 and 1 presence not found!')
-        raise IMOSAcousticReadException("Channel 0 and 1 indication not found in header of file " + file.name)
+        logMsg = "Channel 0 and 1 indication not found in header of file " + file.name
+        log.error(logMsg)
+        raise IMOSAcousticReadException(logMsg)
 
     # regExp = r"Filter 1 C2=(\d) C3=(\d) LF=(\d+) HF=(\d+) PG=(\d+) G=(\d+)"
     match = re.match(regExp, header[4])
@@ -80,6 +81,11 @@ def readDatHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
         raise IMOSAcousticReadException(logMsg)
 
     numCh = isCh0 + isCh1 + isCh2 + isCh3
+    
+    if numCh != 1:
+        logMsg = f"Unexpected numver of channels ({numCh}) in file {file.name}"
+        log.error(logMsg)
+        raise IMOSAcousticReadException(logMsg)
 
     return numCh, rate, duration
 
