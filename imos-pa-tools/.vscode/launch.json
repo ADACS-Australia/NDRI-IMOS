@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "raw_read.py",
             "args": [
-                //"--debug",
+                "--debug",
+                "-f",
                 "54842511.DAT"
             ],
             "console": "integratedTerminal",
