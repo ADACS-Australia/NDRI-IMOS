@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import argparse
 
 import re
 import os
@@ -8,6 +9,9 @@ import wave
 from datetime import datetime
 from typing import Tuple
 import _io
+import logging
+
+log = logging.getLogger('imos-pa-tools')
 
 # --- Example header ---
 #   Record Header-       E24 set# 3444
@@ -40,7 +44,7 @@ def readDatHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
     header = []
     for lineNum in range(0, numLinesHeader):
         line = file.readline()
-        print(f'{lineNum} {line}')
+        log.debug(f'{lineNum} {line}')
         header.append(line.decode("utf-8"))
 
     regExp = r"Sample Rate (\d+) Duration (\d+)"
@@ -49,19 +53,20 @@ def readDatHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
         rate = float(match.group(1))
         duration = float(match.group(2))
     else:
-        print('Sample Rate or Duration not found!')
-        raise IMOSAcousticReadException("Sample Rate or Duration not found in header of file " + file.name)
+        logMsg = "\'Sample Rate\' or \'Duration\' not found in header of file " + file.name
+        log.error(logMsg)
+        raise IMOSAcousticReadException(logMsg)
 
     # regExp = r"Filter 0 C0=(\d+) C1=(\d+) LF=(\d+) HF=(\d+) PG=(\d+) G=(\d+)"
     # optimised - decode only what we need
     regExp = r"Filter [0,1] C[0-3]=(\d+) C[0-3]=(\d+)"
-    print(f'header[3] {header[3]}')
+    
     match = re.match(regExp, header[3])
     if match:
         isCh0 = int(match.group(1))
         isCh1 = int(match.group(2))
     else:
-        print('Channel 0 and 1 presence not found!')
+        log.debug('Channel 0 and 1 presence not found!')
         raise IMOSAcousticReadException("Channel 0 and 1 indication not found in header of file " + file.name)
 
     # regExp = r"Filter 1 C2=(\d) C3=(\d) LF=(\d+) HF=(\d+) PG=(\d+) G=(\d+)"
@@ -70,8 +75,9 @@ def readDatHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
         isCh2 = int(match.group(1))
         isCh3 = int(match.group(2))
     else:
-        print('Channel 2 and 3 indication not found!')
-        raise IMOSAcousticReadException("Channel 2 and 3 indication not found in header of file " + file.name)
+        logMsg = "Channel 2 and 3 indication not found in header of file " + file.name
+        log.error(logMsg)
+        raise IMOSAcousticReadException(logMsg)
 
     numCh = isCh0 + isCh1 + isCh2 + isCh3
 
@@ -81,41 +87,39 @@ def readDatHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
 # Assumes file is already open!
 def readDatBinData(file: _io.BufferedReader, sampleRate: float, durationHeader: float) -> numpy.ndarray:
     numSamplesHeader = int(sampleRate * durationHeader)
-    print(f'numSamplesHeader is {numSamplesHeader}')
+    log.debug(f'numSamplesHeader is {numSamplesHeader}')
 
     # read the nominal chunk of sound record as numpy array of int16
     binData = numpy.frombuffer(file.read(numSamplesHeader * numpy.dtype(numpy.int16).itemsize), dtype=numpy.int16)
-    print(f'Size of read bin data numpy array is {binData.size}')
+    log.debug(f'Size of read bin data as per header numpy array is {binData.size}')
 
     # store the position where the binary data tail begins
     binDataTailPos = file.tell()
-    print(f'>>> file position after bin data as per header is {binDataTailPos}')
+    log.debug(f'File position after bin data as per header is {binDataTailPos}')
 
     fileDataTail = file.read()
     match = re.search(b"Record Marker", fileDataTail)
     if match:
         footerPos = match.start()
     else:
-        print('Footer (Record Marker) not found!')
-        raise IMOSAcousticReadException("Footer (Record Marker) not found in file " + file.name + ". File corrupted?")
-        # exit(ERR_FooterNotFound)
+        logMsg = "Footer (Record Marker) not found in file " + file.name + ". File corrupted?"
+        log.error(logMsg)
+        raise IMOSAcousticReadException(logMsg)
         return False
-
-    print(f'footer position = {footerPos}')
-
+    
     # rewind the file to the position where the binary data tail begins
     file.seek(binDataTailPos, os.SEEK_SET)
 
     pos = file.tell()
-    print(f'>>> file position before read bin data tail is {pos}')
+    log.debug(f'file position before read bin data tail is {pos}')
 
     # read the extra sound record as numpy array of int16
     extraSamplesInBinDataTail = (footerPos - 1) // 2
     binDataTail = numpy.frombuffer(file.read(extraSamplesInBinDataTail * numpy.dtype(numpy.int16).itemsize), dtype=numpy.int16)
-    print(f'Size of extra bin data tail numpy array is {binDataTail.size}')
+    log.debug(f'Size of extra bin data tail numpy array is {binDataTail.size}')
 
     binData = numpy.append(binData, binDataTail)
-    print(f'Size of complete data is {binData.size}')
+    log.info(f'Size of complete data is {binData.size} samples {binData.size * numpy.dtype(numpy.int16).itemsize} bytes')
 
     return binData
 
@@ -128,18 +132,21 @@ def readTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tuple[
     if match:
         footerPos = match.start()
     else:
-        print('Footer (Record Marker) not found!')
-        raise IMOSAcousticReadException("Footer (Record Marker) not found in file " + file.name + ". File corrupted?")
+        logMsg = "Footer (Record Marker) not found in file " + file.name + ". File corrupted?"
+        log.error(logMsg)
+        raise IMOSAcousticReadException(logMsg)
         return False
 
+    footerOffset = fileOffset + footerPos
+    log.debug(f'footer position = {footerOffset}')
     # fast forward to the footer offset
-    file.seek(fileOffset + footerPos, os.SEEK_SET)
+    file.seek(footerOffset, os.SEEK_SET)
 
     footer = []
     # read the footer ("record marker")
     for lineNum in range(0, numLinesFooter):
         line = file.readline()
-        print(f'{lineNum} {line}')
+        log.debug(f'{lineNum} {line}')
         footer.append(line.decode("utf-8"))
 
     regExp = r'(\d{4}/\d{2}/\d{2}) (\d{2}:\d{2}:\d{2})'
@@ -148,64 +155,97 @@ def readTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tuple[
     if match:
         date_str, time_str = match.groups()
         startTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
-        print(f"\'First Data\' timestamp is: {startTime}")
+        log.info(f"\'First Data\' timestamp is: {startTime}")
     else:
-        print("First Data timestamp not found in Footer.")
-        raise IMOSAcousticReadException("First Data timestamp not found in Footer of file " + file.name + ". File corrupted?")
+        logMsg = "First Data timestamp not found in Footer of file " + file.name + ". File corrupted?"
+        log.error(logMsg)
+        raise IMOSAcousticReadException(logMsg)
         return False
 
     match = re.search(regExp, footer[2])
     if match:
         date_str, time_str = match.groups()
         endTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
-        print(f"\'Finalised\' timestamp is: {endTime}")
+        log.info(f"\'Finalised\' timestamp is: {endTime}")
     else:
-        print("Finalised timestamp not found in Footer.")
-        raise IMOSAcousticReadException("Finalised timestamp not found in Footer of file " + file.name + ". File corrupted?")
+        logMsg = "Finalised timestamp not found in Footer of file " + file.name + ". File corrupted?"
+        log.error(logMsg)
+        raise IMOSAcousticReadException(logMsg)
         return False
 
     return startTime, endTime
 
 
+# ------ the code below goes to the tool script ----------------
+
+def parseArgs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--debug', '-d', action='store_true', help='Enable debug mode')
+    parser.add_argument('--filename', '-f', help='The name of the raw .DAT file to process.')
+    args = parser.parse_args()
+    return args
+
+        
 if __name__ == "__main__":
 
-    datFileName = sys.argv[1]
+    log = logging.getLogger('imos-pa-tools')
+    args = parseArgs()
+    
+    # default logging level
+    logLevel = logging.INFO
+    
+    if args.debug:
+        logLevel = logging.DEBUG
+    
+    logFormat = "[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s] %(levelname)s: %(message)s"    
+    logging.basicConfig(level=logLevel, format=logFormat,
+                        #  seconds resolution is good enough for logging timestamp
+                        datefmt='%Y-%m-%d %H:%M:%S')
+
+    datFileName = args.filename
     if not os.path.exists(datFileName):
-        print(f'File {datFileName} not found!')
+        log.error(f'File {datFileName} not found!')
         exit(-1)
 
-    # with open('54842511.DAT', 'rb') as file:
     with open(datFileName, 'rb') as file:
-
         try:
             numChannels, sampleRate, durationHeader = readDatHeader(file)
         except IMOSAcousticReadException as E:
-            print(E)
+            # print(E)
+            exit(-1)
 
+        binDataSuccess = False
         # !@#$%^&* Warning: assuming single channel only,
         # eg: C0=1 C1=0 C2=0 C3=0 in the header.
         # as Sasha Gavrilov suggested there are no data files
         # with more than one channel
-        binData = readDatBinData(file, sampleRate, durationHeader)
+        try:
+            binData = readDatBinData(file, sampleRate, durationHeader)
+            binDataSuccess = True
+        except IMOSAcousticReadException as E:
+            # print(E)
+            exit(-1)
         fileTailOffset = file.tell()
 
         startTime, endTime = readTimesFromFooter(file, fileTailOffset)
-
+        # done reading input raw/.DAT file
         file.close()
 
         # write wav file
-        
-        # Generate the new filename with the .wav suffix
-        if datFileName.endswith(".DAT"):
-            wavFileName = datFileName.rsplit('.', 1)[0] + '.wav'
-        else:
-            wavFileName = datFileName + '.wav'
+        if binDataSuccess:
+            # Generate the new filename with the .wav suffix
+            if datFileName.endswith(".DAT"):
+                wavFileName = datFileName.rsplit('.', 1)[0] + '.wav'
+            else:
+                wavFileName = datFileName + '.wav'
 
-        # Open the WAV file
-        with wave.open(wavFileName, 'w') as wavFile:
-            # Set the parameters of the output file
-            wavFile.setnchannels(1)  # mono
-            wavFile.setsampwidth(2)  # in bytes, 16bit samples
-            wavFile.setframerate(sampleRate)
-            wavFile.setnframes(binData.size)
-            wavFile.writeframes(binData.tobytes())
+            # Open the WAV file
+            with wave.open(wavFileName, 'w') as wavFile:
+                # Set the parameters of the output file
+                wavFile.setnchannels(1)  # mono
+                wavFile.setsampwidth(2)  # in bytes, 16bit samples
+                wavFile.setframerate(sampleRate)
+                wavFile.setnframes(binData.size)
+                wavFile.writeframes(binData.tobytes())
+    
+            log.info(f"Written {wavFileName}")
