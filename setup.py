@@ -17,8 +17,8 @@ def get_version():
     """Get the version number of BEANSp"""
     # ## the original inspired by Paul's Aegean package
     # ## does not work with simplified imports trick in __init__.py
-    import beansp
-    return beansp.__version__
+    import imos-pa-tools
+    return imos-pa-tools.__version__
 
 
 with open('README.rst') as readme_file:
