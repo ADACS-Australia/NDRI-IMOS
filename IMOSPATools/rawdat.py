@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import re
 import os
 import numpy
@@ -7,7 +6,6 @@ from typing import Tuple
 import _io
 import logging
 
-log = logging.getLogger('imos-pa-tools')
 
 # --- Example header ---
 #   Record Header-       E24 set# 3444

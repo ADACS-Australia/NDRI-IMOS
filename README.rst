@@ -29,17 +29,17 @@ Based on matlab code modules of CHORUS software by Alexander N. Gavrilov.
 
 .. Package installation and usage
 .. ------------------------------
-.. BEANSp is on pyPI (https://pypi.org/project/imos-pa-tools/) so installation is easy - either straight or in virtual environment:
+.. BEANSp is on pyPI (https://pypi.org/project/IMOSPATools/) so installation is easy - either straight or in virtual environment:
 .. 
 ..    .. code-block::
 ..    
-..       pip install imos-pa-tools
+..       pip install IMOSPATools
 ..   
 ..    .. ::
 ..    
 ..    .. code-block::
 ..    
-..       from imos-pa-tools import ...
+..       from IMOSPATools import ...
 
 
 Build and installation from this github repository

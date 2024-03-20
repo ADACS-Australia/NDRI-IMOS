@@ -1,11 +1,11 @@
-========
-BEANSp
-========
+=============
+IMOSPATools
+=============
 
 Build and installation from this github repository
 --------------------------------------------------
 
-#. Install/upgarde pip, build and local install
+#. Install/upgrade pip, build and local install
 
    .. code-block::
   
@@ -28,15 +28,12 @@ Build and installation from this github repository
 
    .. code-block::
      
-      python3 -m pip -v uninstall imos-pa-tools
+      python3 -m pip -v uninstall IMOSPATools
       python3 -m pip -v cache purge
-
-   After this, in that environment, beansp just works from every directory, providing the conda environment is activated.
-   Imports like:
 
    .. code-block::
 
-      from imos-pa-tools import ...
+      from IMOSPATools import ...
 
    (See `test_sft_beans.py <tests/test_sft_beans.py>`_.)
 

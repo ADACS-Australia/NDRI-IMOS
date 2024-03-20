@@ -8,9 +8,9 @@ from typing import Tuple
 import _io
 import logging
 
-from imos-pa-tools import raw_read
+from IMOSPATools import rawdat
 
-log = logging.getLogger('imos-pa-tools')
+log = logging.getLogger('IMOSPATools')
 
 # err codes
 # ERR_FooterNotFound = -2
