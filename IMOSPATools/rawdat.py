@@ -28,6 +28,7 @@ numLinesFooter = 4
 # err codes
 # ERR_FooterNotFound = -2
 
+log = logging.getLogger('IMOSPATools')
 
 class IMOSAcousticReadException(Exception):
     pass

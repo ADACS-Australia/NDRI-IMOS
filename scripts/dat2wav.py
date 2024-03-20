@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import argparse
 
-import sys
+import os
 import wave
 from datetime import datetime
 from typing import Tuple
@@ -46,8 +46,8 @@ if __name__ == "__main__":
 
     with open(datFileName, 'rb') as file:
         try:
-            numChannels, sampleRate, durationHeader = readDatHeader(file)
-        except IMOSAcousticReadException as E:
+            numChannels, sampleRate, durationHeader = rawdat.readDatHeader(file)
+        except rawdat.IMOSAcousticReadException as E:
             # print(E)
             exit(-1)
 
@@ -57,14 +57,14 @@ if __name__ == "__main__":
         # as Sasha Gavrilov suggested there are no data files
         # with more than one channel
         try:
-            binData = readDatBinData(file, sampleRate, durationHeader)
+            binData = rawdat.readDatBinData(file, sampleRate, durationHeader)
             binDataSuccess = True
-        except IMOSAcousticReadException as E:
+        except rawdat.IMOSAcousticReadException as E:
             # print(E)
             exit(-1)
         fileTailOffset = file.tell()
 
-        startTime, endTime = readTimesFromFooter(file, fileTailOffset)
+        startTime, endTime = rawdat.readTimesFromFooter(file, fileTailOffset)
         # done reading input raw/.DAT file
         file.close()
 
