@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 """
 -------------------------------
-IMOS passive audio tools module
+IMOS Passive Audio Tools module
 -------------------------------
 
 This module was written as a Python alternative to Matlab routines 
-to read, calibrate anc convert RAW IMOS passive audio records.
+to read, calibrate anc convert raw (.DAT) IMOS passive audio records.
 Inspired by code that is part of Chorus software by Alexander Gavrilov
 of Curtin based Centre for Marine Science and Technology
 http://cmst.curtin.edu.au/products/chorus-software
