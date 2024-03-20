@@ -26,8 +26,6 @@ def parseArgs():
 
         
 if __name__ == "__main__":
-
-    log = logging.getLogger('imos-pa-tools')
     args = parseArgs()
     
     # default logging level

@@ -31,7 +31,7 @@ with open('HISTORY.rst') as history_file:
 requirements = ["numpy",
                 "wave"]
 
-package_name = 'imos-pa-tools'
+package_name = 'IMOSPATools'
 
 setup(
     author=get_property('__author__', package_name),
