@@ -16,5 +16,6 @@ This python module was developed as a part of ADACS funding.
 https://adacs.org.au
 """
 __author__ = 'Martin Cupak'
+__email__ = 'martin.cupak@curtin.edu.au'
 __version__ = '0.1'
 __date__ = '2024-03-05'
