@@ -14,11 +14,11 @@ def get_property(prop, project):
 
 
 def get_version():
-    """Get the version number of BEANSp"""
+    """Get the version number of the package"""
     # ## the original inspired by Paul's Aegean package
     # ## does not work with simplified imports trick in __init__.py
-    import imos-pa-tools
-    return imos-pa-tools.__version__
+    import IMOSPATools
+    return IMOSPATools.__version__
 
 
 with open('README.rst') as readme_file:
@@ -51,7 +51,7 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
     ],
-    description="IMOS passive audio data processing tools",
+    description="IMOS Passive Audio Data Processing Tools",
     install_requires=requirements,
     license="MIT license",
     long_description=readme + '\n\n' + history,
