@@ -70,4 +70,4 @@ if __name__ == "__main__":
 
         if binDataSuccess:
             # write wav file
-            wav.write(log, rawFileName, sampleRate, binDataSuccess, binData)
+            wav.writeMono16bit(log, rawFileName, sampleRate, binData)
