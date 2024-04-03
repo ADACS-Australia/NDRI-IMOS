@@ -1,13 +1,19 @@
 import wave
-from datetime import datetime
-from typing import Tuple
+import numpy
 
-# Write simple mono wav file
-#   !@#$%^&* Warning: assuming single channel only,
-#   eg: C0=1 C1=0 C2=0 C3=0 in the header.
-#   as Sasha Gavrilov suggested there are no data files
-#   with more than one channel
-def write(log, rawFileName, sampleRate, binDataSuccess, binData):
+def writeMono16bit(log, rawFileName, sampleRate: float, binData: numpy.ndarray):
+    """
+    Write simple mono wav file, 16bit per sample
+
+    !@#$%^&* Warning: assuming single channel only,
+    as Sasha Gavrilov suggested that there are no data files
+    with more than one channel
+
+    :param log: higher level log file
+    :param rawFileName: filename of the raw (DAT) file from which the vav filename shall be derived
+    :param sampleRate: audio sampling rate
+    :param binData: audio data
+    """
     # Generate the new filename with the .wav suffix
     if rawFileName.endswith(".DAT"):
         wavFileName = rawFileName.rsplit('.', 1)[0] + '.wav'
