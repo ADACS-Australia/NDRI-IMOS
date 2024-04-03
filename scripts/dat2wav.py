@@ -2,13 +2,13 @@
 import argparse
 
 import os
-import wave
 from datetime import datetime
 from typing import Tuple
 import _io
 import logging
 
 from IMOSPATools import rawdat
+from IMOSPATools import wav
 
 log = logging.getLogger('IMOSPATools')
 
@@ -23,7 +23,6 @@ def parseArgs():
     parser.add_argument('--filename', '-f', help='The name of the raw .DAT file to process.')
     args = parser.parse_args()
     return args
-
         
 if __name__ == "__main__":
     args = parseArgs()
@@ -39,12 +38,12 @@ if __name__ == "__main__":
                         #  seconds resolution is good enough for logging timestamp
                         datefmt='%Y-%m-%d %H:%M:%S')
 
-    datFileName = args.filename
-    if not os.path.exists(datFileName):
-        log.error(f'File {datFileName} not found!')
+    rawFileName = args.filename
+    if not os.path.exists(rawFileName):
+        log.error(f'File {rawFileName} not found!')
         exit(-1)
 
-    with open(datFileName, 'rb') as file:
+    with open(rawFileName, 'rb') as file:
         try:
             numChannels, sampleRate, durationHeader = rawdat.readRawHeader(file)
         except rawdat.IMOSAcousticReadException as E:
@@ -69,21 +68,6 @@ if __name__ == "__main__":
         # done reading input raw/.DAT file
         file.close()
 
-        # write wav file
         if binDataSuccess:
-            # Generate the new filename with the .wav suffix
-            if datFileName.endswith(".DAT"):
-                wavFileName = datFileName.rsplit('.', 1)[0] + '.wav'
-            else:
-                wavFileName = datFileName + '.wav'
-
-            # Open the WAV file
-            with wave.open(wavFileName, 'w') as wavFile:
-                # Set the parameters of the output file
-                wavFile.setnchannels(1)  # mono
-                wavFile.setsampwidth(2)  # in bytes, 16bit samples
-                wavFile.setframerate(sampleRate)
-                wavFile.setnframes(binData.size)
-                wavFile.writeframes(binData.tobytes())
-    
-            log.info(f"Written {wavFileName}")
+            # write wav file
+            wav.write(log, rawFileName, sampleRate, binDataSuccess, binData)
