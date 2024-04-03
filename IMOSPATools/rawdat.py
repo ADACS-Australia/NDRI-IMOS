@@ -35,7 +35,7 @@ class IMOSAcousticReadException(Exception):
 
 
 # Assumes file is already open!
-def readDatHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
+def readRawHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
     header = []
     for lineNum in range(0, numLinesHeader):
         line = file.readline()
@@ -86,7 +86,7 @@ def readDatHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
 
 
 # Assumes file is already open!
-def readDatBinData(file: _io.BufferedReader, sampleRate: float, durationHeader: float) -> numpy.ndarray:
+def readRawBinData(file: _io.BufferedReader, sampleRate: float, durationHeader: float) -> numpy.ndarray:
     numSamplesHeader = int(sampleRate * durationHeader)
     log.debug(f'numSamplesHeader is {numSamplesHeader}')
 
@@ -126,7 +126,7 @@ def readDatBinData(file: _io.BufferedReader, sampleRate: float, durationHeader: 
 
 
 # Assumes file is already open!
-def readTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tuple[datetime, datetime]:
+def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tuple[datetime, datetime]:
     file.seek(fileOffset, os.SEEK_SET)
     fileDataTail = file.read()
     match = re.search(b"Record Marker", fileDataTail)

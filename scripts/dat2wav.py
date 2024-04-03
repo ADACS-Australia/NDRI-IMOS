@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     with open(datFileName, 'rb') as file:
         try:
-            numChannels, sampleRate, durationHeader = rawdat.readDatHeader(file)
+            numChannels, sampleRate, durationHeader = rawdat.readRawHeader(file)
         except rawdat.IMOSAcousticReadException as E:
             # print(E)
             exit(-1)
@@ -57,14 +57,15 @@ if __name__ == "__main__":
         # as Sasha Gavrilov suggested there are no data files
         # with more than one channel
         try:
-            binData = rawdat.readDatBinData(file, sampleRate, durationHeader)
+            binData = rawdat.readRawBinData(file, sampleRate, durationHeader)
             binDataSuccess = True
         except rawdat.IMOSAcousticReadException as E:
             # print(E)
             exit(-1)
         fileTailOffset = file.tell()
 
-        startTime, endTime = rawdat.readTimesFromFooter(file, fileTailOffset)
+        startTime, endTime = rawdat.readRawTimesFromFooter(file, fileTailOffset)
+        
         # done reading input raw/.DAT file
         file.close()
 
