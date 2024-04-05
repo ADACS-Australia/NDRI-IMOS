@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Tuple
 import _io
 import logging
-
+from typing import Final
 
 # --- Example header ---
 #   Record Header-       E24 set# 3444
@@ -13,7 +13,7 @@ import logging
 #   Sample Rate 06000 Duration 0000000300
 #   Filter 0 C0=1 C1=0 LF=008 HF=02800 PG=010 G=001
 #   Filter 1 C2=0 C3=0 LF=008 HF=05000 PG=001 G=001
-numLinesHeader = 5
+NUM_LINES_HEADER: Final[int] = 5
 
 # --- Example footer ---
 #   Record Marker
@@ -23,10 +23,13 @@ numLinesHeader = 5
 #   Data to RAM = 0
 #   Data block size = 0065536
 # Note: some older files have only the first 4 lines of the footer
-numLinesFooter = 4
+NUM_LINES_FOOTER: Final[int] = 4
 
 # err codes
 # ERR_FooterNotFound = -2
+
+BITS_PER_SAMPLE: Final[int] = 16
+
 
 log = logging.getLogger('IMOSPATools')
 
@@ -37,7 +40,7 @@ class IMOSAcousticReadException(Exception):
 # Assumes file is already open!
 def readRawHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
     header = []
-    for lineNum in range(0, numLinesHeader):
+    for lineNum in range(0, NUM_LINES_HEADERN):
         line = file.readline()
         log.debug(f'{lineNum} {line}')
         header.append(line.decode("utf-8"))
@@ -145,7 +148,7 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
 
     footer = []
     # read the footer ("record marker")
-    for lineNum in range(0, numLinesFooter):
+    for lineNum in range(0, NUM_LINES_Footer):
         line = file.readline()
         log.debug(f'{lineNum} {line}')
         footer.append(line.decode("utf-8"))
