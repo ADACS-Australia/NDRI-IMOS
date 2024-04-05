@@ -12,7 +12,7 @@ def writeMono16bit(log, rawFileName, sampleRate: float, binData: numpy.ndarray):
     :param log: higher level log file
     :param rawFileName: filename of the raw (DAT) file from which the vav filename shall be derived
     :param sampleRate: audio sampling rate
-    :param binData: audio data
+    :param binData: raw audio data
     """
     # Generate the new filename with the .wav suffix
     if rawFileName.endswith(".DAT"):
