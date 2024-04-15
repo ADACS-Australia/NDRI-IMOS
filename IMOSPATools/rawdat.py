@@ -1,7 +1,7 @@
 import re
 import os
 import numpy
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Tuple
 import _io
 import logging
@@ -40,7 +40,7 @@ class IMOSAcousticReadException(Exception):
 # Assumes file is already open!
 def readRawHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
     header = []
-    for lineNum in range(0, NUM_LINES_HEADERN):
+    for lineNum in range(0, NUM_LINES_HEADER):
         line = file.readline()
         log.debug(f'{lineNum} {line}')
         header.append(line.decode("utf-8"))
@@ -148,33 +148,53 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
 
     footer = []
     # read the footer ("record marker")
-    for lineNum in range(0, NUM_LINES_Footer):
+    for lineNum in range(0, NUM_LINES_FOOTER):
         line = file.readline()
         log.debug(f'{lineNum} {line}')
         footer.append(line.decode("utf-8"))
 
-    regExp = r'(\d{4}/\d{2}/\d{2}) (\d{2}:\d{2}:\d{2})'
+    regExpDatetime = r'(\d{4}/\d{2}/\d{2}) (\d{2}:\d{2}:\d{2})'
+    regExpSubseconds = r'(\d{5})$'
 
-    match = re.search(regExp, footer[1])
+    match = re.search(regExpDatetime, footer[1])
     if match:
         date_str, time_str = match.groups()
         startTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
-        log.info(f"\'First Data\' timestamp is: {startTime}")
+        log.debug(f"\'First Data\' timestamp without sub-seconds is: {startTime}")
     else:
         logMsg = "First Data timestamp not found in Footer of file " + file.name + ". File corrupted?"
         log.error(logMsg)
         raise IMOSAcousticReadException(logMsg)
         return False
-
-    match = re.search(regExp, footer[2])
+    match = re.search(regExpSubseconds, footer[1])
+    if match:
+        startTime += timedelta(seconds=float(match[1])/(float)(1<<16))
+        log.info(f"\'First Data\' timestamp is: {startTime}")
+    else:
+        logMsg = "First Data timestamp sub-seconds not found in Footer of file " + file.name + ". File corrupted?"
+        log.error(logMsg)
+        raise IMOSAcousticReadException(logMsg)
+        return False
+    
+    match = re.search(regExpDatetime, footer[2])
     if match:
         date_str, time_str = match.groups()
         endTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
-        log.info(f"\'Finalised\' timestamp is: {endTime}")
+        log.debug(f"\'Finalised\' timestamp is: {endTime}")
     else:
         logMsg = "Finalised timestamp not found in Footer of file " + file.name + ". File corrupted?"
         log.error(logMsg)
         raise IMOSAcousticReadException(logMsg)
         return False
+    match = re.search(regExpSubseconds, footer[2])
+    if match:
+        endTime += timedelta(seconds=float(match[1])/(float)(1<<16))
+        log.info(f"\'Finalised\' timestamp without sub-seconds is: {endTime}")
+    else:
+        logMsg = "Finalised timestamp sub-seconds not found in Footer of file " + file.name + ". File corrupted?"
+        log.error(logMsg)
+        raise IMOSAcousticReadException(logMsg)
+        return False
+    
 
     return startTime, endTime
