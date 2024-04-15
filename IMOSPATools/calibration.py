@@ -21,6 +21,9 @@ def countOverload(binData: numpy.ndarray) -> int:
     """
     Count samples with overload
     (too sensitive gain, limited)
+    In the original code, a window popped up with warning during
+    the interactive method of loading and calibrating sound logger data
+    ('Logger was overloaded - signal is clipped on all recorder channels')
     
     :param binData: raw audio data
     :return: count of samples with overload
