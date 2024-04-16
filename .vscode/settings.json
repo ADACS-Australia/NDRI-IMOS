@@ -1,0 +1,4 @@
+{
+    "python.venvPath": "~/miniconda3/envs"
+    // "python.defaultInterpreterPath": "~/miniconda3/envs/imos-3.10/bin/python"
+}
