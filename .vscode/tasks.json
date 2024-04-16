@@ -1,0 +1,19 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "type": "shell",
+        "label": "Build and locally pip install IMOSPATools python package",
+        "command": "python3 -m build; python3 -m pip install .",
+        // "args": ["-m", "build"],
+        // "options": {
+        //   "cwd": "/usr/bin"
+        // },
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "detail": "Manually created by MCu."
+      }
+    ]
+  }
