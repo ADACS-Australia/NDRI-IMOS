@@ -197,3 +197,32 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
         return False
 
     return startTime, endTime
+
+
+def readRawFile(fileName: str) ->
+    (numpy.ndarray, Tuple[int, float, float, datetime, datetime]):
+    
+    with open(fileName, 'rb') as file:
+        try:
+            numChannels, sampleRate, durationHeader = rawdat.readRawHeader(file)
+        except rawdat.IMOSAcousticReadException as E:
+            # print(E)
+            exit(-1)
+
+        binDataSuccess = False
+        # !@#$%^&* Warning: assuming single channel only,
+        # eg: C0=1 C1=0 C2=0 C3=0 in the header.
+        # as Sasha Gavrilov suggested there are no data files
+        # with more than one channel
+        try:
+            binData = rawdat.readRawBinData(file, sampleRate, durationHeader)
+            binDataSuccess = True
+        except rawdat.IMOSAcousticReadException as E:
+            # print(E)
+            exit(-1)
+        fileTailOffset = file.tell()
+
+        startTime, endTime = rawdat.readRawTimesFromFooter(file, fileTailOffset)
+        
+        # done reading input raw/.DAT file
+        file.close()
