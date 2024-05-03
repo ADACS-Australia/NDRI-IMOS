@@ -81,7 +81,7 @@ def readRawHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
     numCh = isCh0 + isCh1 + isCh2 + isCh3
     
     if numCh != 1:
-        logMsg = f"Unexpected numver of channels ({numCh}) in file {file.name}"
+        logMsg = f"Unexpected number of channels ({numCh}) in file {file.name}"
         log.error(logMsg)
         raise IMOSAcousticReadException(logMsg)
 
@@ -195,6 +195,5 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
         log.error(logMsg)
         raise IMOSAcousticReadException(logMsg)
         return False
-    
 
     return startTime, endTime
