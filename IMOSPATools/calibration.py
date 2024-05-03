@@ -1,6 +1,7 @@
 import re
 import os
 import numpy
+import scipy
 from datetime import datetime
 from typing import Tuple
 import _io
@@ -49,6 +50,18 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
 
     return voltsData
 
-def calibrate(volts: numpy.ndarray) -> numpy.ndarray:
+def loadPrepCalibFile(calibFileName, cnl: float, hs: float)
+
+scipy.signal.welch(x, fs=1.0, window='hann', nperseg=None, noverlap=None, nfft=None, detrend='constant', return_onesided=True, scaling='density', axis=-1, average='mean')
+
+def calibrate(volts: numpy.ndarray, cnl: float, hs: float) -> numpy.ndarray:
+    """
+    calibrate sound record
+    
+    :param volts: audio data in Volts
+    :param cnl: calibration noise level (dB re V^2/Hz)
+    :hydrophone sensitivity (dB re V/uPa) 
+    :return: calibrated audio data in Volts
+    """
     
     return calibData
