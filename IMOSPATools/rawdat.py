@@ -6,6 +6,7 @@ from typing import Tuple
 import _io
 import logging
 from typing import Final
+from dataclasses import dataclass
 
 # --- Example header ---
 #   Record Header-       E24 set# 3444
@@ -30,11 +31,71 @@ NUM_LINES_FOOTER: Final[int] = 4
 
 BITS_PER_SAMPLE: Final[int] = 16
 
+REGEXP_DATETIME: Final[str] = r'(\d{4}/\d{2}/\d{2}) (\d{2}:\d{2}:\d{2})'
+REGEXP_SUBSECONDS: Final[str] = r'(\d{5})$'
+REGEXP_SAMPLE_RATE: Final[str] = r"Sample Rate (\d+) Duration (\d+)"
+REGEXP_FILTER: Final[str] = r"Filter [0,1] C[0-3]=(\d+) C[0-3]=(\d+)"
+
+
+@dataclass
+class RAWFileFilterLine:
+    channelA: bool = 0
+    channelB: bool = 0
+    lowFreq: int = -1
+    highFreq: int = -1
+    pGain: int = -1
+    gain: int = -1
+
+
+@dataclass
+class RAWFileHeader:
+    recordHeader: str = ""
+    # not always can be set extracted from the RAW file header.
+    # if not known, -1 is used.
+    setID: int = -1
+    schedule: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    sampleRate: int = -1
+    duration: int = -1
+    filter0: RAWFileFilterLine 
+    filter1: RAWFileFilterLine 
+     
+
+@dataclass
+class RAWFileFooter:
+    recordHeader: str = ""
+    startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    dataValidity: str = "no idea"
+    dataToRAM: bool = 0
+    dataBlockSize: int = 65536
+
 
 log = logging.getLogger('IMOSPATools')
 
-class IMOSAcousticReadException(Exception):
+class IMOSAcousticRAWReadException(Exception):
     pass
+
+
+def convertHeaderTime(line: str, whatTime: str) -> datetime:
+    match = re.search(REGEXP_DATETIME, line)
+    if match:
+        date_str, time_str = match.groups()
+        startTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
+        log.debug(f"\'{whatTime}\' timestamp without sub-seconds is: {startTime}")
+    else:
+        logMsg = f"\'{whatTime}\' timestamp not found in Footer of file {file.name}. File corrupted?"
+        log.error(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
+        return False
+    match = re.search(REGEXP_SUBSECONDS, line)
+    if match:
+        startTime += timedelta(seconds=float(match[1])/(float)(1<<16))
+        log.info(f"\'{whatTime}\' timestamp is: {startTime}")
+    else:
+        logMsg = f"\'{whatTime}\' timestamp sub-seconds not found in Footer of file {file.name}. File corrupted?"
+        log.error(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
+        return False
 
 
 # Assumes file is already open!
@@ -53,7 +114,7 @@ def readRawHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
     else:
         logMsg = "\'Sample Rate\' or \'Duration\' not found in header of file " + file.name
         log.error(logMsg)
-        raise IMOSAcousticReadException(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
 
     # regExp = r"Filter 0 C0=(\d+) C1=(\d+) LF=(\d+) HF=(\d+) PG=(\d+) G=(\d+)"
     # optimised - decode only what we need
@@ -66,7 +127,7 @@ def readRawHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
     else:
         logMsg = "Channel 0 and 1 indication not found in header of file " + file.name
         log.error(logMsg)
-        raise IMOSAcousticReadException(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
 
     # regExp = r"Filter 1 C2=(\d) C3=(\d) LF=(\d+) HF=(\d+) PG=(\d+) G=(\d+)"
     match = re.match(regExp, header[4])
@@ -76,14 +137,14 @@ def readRawHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
     else:
         logMsg = "Channel 2 and 3 indication not found in header of file " + file.name
         log.error(logMsg)
-        raise IMOSAcousticReadException(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
 
     numCh = isCh0 + isCh1 + isCh2 + isCh3
     
     if numCh != 1:
         logMsg = f"Unexpected number of channels ({numCh}) in file {file.name}"
         log.error(logMsg)
-        raise IMOSAcousticReadException(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
 
     return numCh, rate, duration
 
@@ -108,7 +169,7 @@ def readRawBinData(file: _io.BufferedReader, sampleRate: float, durationHeader: 
     else:
         logMsg = "Footer (Record Marker) not found in file " + file.name + ". File corrupted?"
         log.error(logMsg)
-        raise IMOSAcousticReadException(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
         return False
     
     # rewind the file to the position where the binary data tail begins
@@ -138,7 +199,7 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
     else:
         logMsg = "Footer (Record Marker) not found in file " + file.name + ". File corrupted?"
         log.error(logMsg)
-        raise IMOSAcousticReadException(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
         return False
 
     footerOffset = fileOffset + footerPos
@@ -164,7 +225,7 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
     else:
         logMsg = "First Data timestamp not found in Footer of file " + file.name + ". File corrupted?"
         log.error(logMsg)
-        raise IMOSAcousticReadException(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
         return False
     match = re.search(regExpSubseconds, footer[1])
     if match:
@@ -173,7 +234,7 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
     else:
         logMsg = "First Data timestamp sub-seconds not found in Footer of file " + file.name + ". File corrupted?"
         log.error(logMsg)
-        raise IMOSAcousticReadException(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
         return False
     
     match = re.search(regExpDatetime, footer[2])
@@ -184,7 +245,7 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
     else:
         logMsg = "Finalised timestamp not found in Footer of file " + file.name + ". File corrupted?"
         log.error(logMsg)
-        raise IMOSAcousticReadException(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
         return False
     match = re.search(regExpSubseconds, footer[2])
     if match:
@@ -193,7 +254,7 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
     else:
         logMsg = "Finalised timestamp sub-seconds not found in Footer of file " + file.name + ". File corrupted?"
         log.error(logMsg)
-        raise IMOSAcousticReadException(logMsg)
+        raise IMOSAcousticRAWReadException(logMsg)
         return False
 
     return startTime, endTime
@@ -205,7 +266,7 @@ def readRawFile(fileName: str) ->
     with open(fileName, 'rb') as file:
         try:
             numChannels, sampleRate, durationHeader = rawdat.readRawHeader(file)
-        except rawdat.IMOSAcousticReadException as E:
+        except IMOSAcousticRAWReadException as E:
             # print(E)
             exit(-1)
 
@@ -217,7 +278,7 @@ def readRawFile(fileName: str) ->
         try:
             binData = rawdat.readRawBinData(file, sampleRate, durationHeader)
             binDataSuccess = True
-        except rawdat.IMOSAcousticReadException as E:
+        except IMOSAcousticRAWReadException as E:
             # print(E)
             exit(-1)
         fileTailOffset = file.tell()
