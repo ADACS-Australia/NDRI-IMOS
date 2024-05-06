@@ -46,7 +46,7 @@ if __name__ == "__main__":
     with open(rawFileName, 'rb') as file:
         try:
             numChannels, sampleRate, durationHeader = rawdat.readRawHeader(file)
-        except rawdat.IMOSAcousticReadException as E:
+        except rawdat.IMOSAcousticRAWReadException as E:
             # print(E)
             exit(-1)
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         try:
             binData = rawdat.readRawBinData(file, sampleRate, durationHeader)
             binDataSuccess = True
-        except rawdat.IMOSAcousticReadException as E:
+        except rawdat.IMOSAcousticRAWReadException as E:
             # print(E)
             exit(-1)
         fileTailOffset = file.tell()
