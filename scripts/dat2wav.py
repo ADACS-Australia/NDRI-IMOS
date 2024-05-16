@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     with open(rawFileName, 'rb') as file:
         try:
-            numChannels, sampleRate, durationHeader = rawdat.readRawHeader(file)
+            numChannels, sampleRate, durationHeader = rawdat.readRawHeaderEssentials(file)
         except rawdat.IMOSAcousticRAWReadException as E:
             # print(E)
             exit(-1)

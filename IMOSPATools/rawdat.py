@@ -1,12 +1,12 @@
 import re
 import os
 import numpy
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Tuple
 import _io
 import logging
 from typing import Final
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 # --- Example header ---
 #   Record Header-       E24 set# 3444
@@ -56,9 +56,9 @@ class RAWFileHeader:
     schedule: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     sampleRate: int = -1
     duration: int = -1
-    filter0: RAWFileFilterLine 
-    filter1: RAWFileFilterLine 
-     
+    filter0: RAWFileFilterLine = field(default_factory=RAWFileFilterLine)
+    filter1: RAWFileFilterLine = field(default_factory=RAWFileFilterLine)
+
 
 @dataclass
 class RAWFileFooter:
@@ -76,30 +76,45 @@ class IMOSAcousticRAWReadException(Exception):
     pass
 
 
-def convertHeaderTime(line: str, whatTime: str) -> datetime:
+def convertHeaderTime(line: str, timeLabel: str) -> datetime:
+    """
+    Convert time string found in RAW file header into datetime class
+
+    :param line: line of the header that contains time
+    :param limeLabel: label of the time for log prints
+    :return: time in datetime class format
+    """
     match = re.search(REGEXP_DATETIME, line)
     if match:
         date_str, time_str = match.groups()
-        startTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
-        log.debug(f"\'{whatTime}\' timestamp without sub-seconds is: {startTime}")
+        dateTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
+        log.debug(f"\'{timeLabel}\' timestamp without sub-seconds is: {startTime}")
     else:
-        logMsg = f"\'{whatTime}\' timestamp not found in Footer of file {file.name}. File corrupted?"
+        logMsg = f"\'{timeLabel}\' timestamp not found in Footer of file {file.name}. File corrupted?"
         log.error(logMsg)
         raise IMOSAcousticRAWReadException(logMsg)
         return False
     match = re.search(REGEXP_SUBSECONDS, line)
     if match:
-        startTime += timedelta(seconds=float(match[1])/(float)(1<<16))
-        log.info(f"\'{whatTime}\' timestamp is: {startTime}")
+        dateTime += timedelta(seconds=float(match[1])/(float)(1<<16))
+        log.info(f"\'{timeLabel}\' timestamp is: {startTime}")
     else:
-        logMsg = f"\'{whatTime}\' timestamp sub-seconds not found in Footer of file {file.name}. File corrupted?"
+        logMsg = f"\'{timeLabel}\' timestamp sub-seconds not found in Footer of file {file.name}. File corrupted?"
         log.error(logMsg)
         raise IMOSAcousticRAWReadException(logMsg)
         return False
+    
+    return dateTime
 
 
-# Assumes file is already open!
-def readRawHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
+def readRawHeaderEssentials(file: _io.BufferedReader) -> Tuple[int, float, float]:
+    """
+    Read essential parameters from RAW file header
+    Assumes file is already open!
+    
+    :param file: already open file
+    :return: number of channels, sampling rate, record duration
+    """
     header = []
     for lineNum in range(0, NUM_LINES_HEADER):
         line = file.readline()
@@ -149,8 +164,17 @@ def readRawHeader(file: _io.BufferedReader) -> Tuple[int, float, float]:
     return numCh, rate, duration
 
 
-# Assumes file is already open!
 def readRawBinData(file: _io.BufferedReader, sampleRate: float, durationHeader: float) -> numpy.ndarray:
+    """
+    Read binary data block (audio recording) from RAW file
+    Assumes file is already open!
+    
+    :param file: already open file
+    :return: sampling rate
+    :return: record duration as read from the header 
+        (in reality little longer, need to scan for footer marker to figure out)
+    :return: audio data as numpy array
+    """
     numSamplesHeader = int(sampleRate * durationHeader)
     log.debug(f'numSamplesHeader is {numSamplesHeader}')
 
@@ -189,8 +213,14 @@ def readRawBinData(file: _io.BufferedReader, sampleRate: float, durationHeader: 
     return binData
 
 
-# Assumes file is already open!
 def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tuple[datetime, datetime]:
+    """
+    Read  from RAW file
+    Assumes file is already open!
+    
+    :param file: already open file
+    :return: record start time and end time from the footer, as datetime class
+    """
     file.seek(fileOffset, os.SEEK_SET)
     fileDataTail = file.read()
     match = re.search(b"Record Marker", fileDataTail)
@@ -241,7 +271,7 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
     if match:
         date_str, time_str = match.groups()
         endTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
-        log.debug(f"\'Finalised\' timestamp is: {endTime}")
+        log.debug(f"\'Finalised\' timestamp without sub-seconds is: {endTime}")
     else:
         logMsg = "Finalised timestamp not found in Footer of file " + file.name + ". File corrupted?"
         log.error(logMsg)
@@ -250,7 +280,7 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
     match = re.search(regExpSubseconds, footer[2])
     if match:
         endTime += timedelta(seconds=float(match[1])/(float)(1<<16))
-        log.info(f"\'Finalised\' timestamp without sub-seconds is: {endTime}")
+        log.info(f"\'Finalised\' timestamp is: {endTime}")
     else:
         logMsg = "Finalised timestamp sub-seconds not found in Footer of file " + file.name + ". File corrupted?"
         log.error(logMsg)
@@ -260,9 +290,18 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
     return startTime, endTime
 
 
-def readRawFile(fileName: str) ->
-    (numpy.ndarray, Tuple[int, float, float, datetime, datetime]):
+def readRawFile(fileName: str) -> (numpy.ndarray, Tuple[int, float, float, datetime, datetime]):
+    """
+    Read RAW file
+        
+    :param fileName: file name (can be relative/full path) 
     
+    :return: sampling rate
+    :return: audio data as numpy array
+    :return: number of channels, sampling rate,
+    :return: record duration as read from the header
+    :return: record start time and end time from the footer, as datetime class        
+    """
     with open(fileName, 'rb') as file:
         try:
             numChannels, sampleRate, durationHeader = rawdat.readRawHeader(file)
@@ -287,3 +326,6 @@ def readRawFile(fileName: str) ->
         
         # done reading input raw/.DAT file
         file.close()
+        
+        return binData, numChannels, sampleRate, durationHeader, startTime, endTime
+        

@@ -1,7 +1,8 @@
 import wave
 import numpy
+import logging
 
-def writeMono16bit(log, rawFileName, sampleRate: float, binData: numpy.ndarray):
+def writeMono16bit(log: logging.Logger, rawFileName: str, sampleRate: float, binData: numpy.ndarray):
     """
     Write simple mono wav file, 16bit per sample
 
@@ -14,6 +15,7 @@ def writeMono16bit(log, rawFileName, sampleRate: float, binData: numpy.ndarray):
     :param sampleRate: audio sampling rate
     :param binData: raw audio data
     """
+    
     # Generate the new filename with the .wav suffix
     if rawFileName.endswith(".DAT"):
         wavFileName = rawFileName.rsplit('.', 1)[0] + '.wav'
