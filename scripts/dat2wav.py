@@ -43,31 +43,9 @@ if __name__ == "__main__":
         log.error(f'File {rawFileName} not found!')
         exit(-1)
 
-    with open(rawFileName, 'rb') as file:
-        try:
-            numChannels, sampleRate, durationHeader = rawdat.readRawHeaderEssentials(file)
-        except rawdat.IMOSAcousticRAWReadException as E:
-            # print(E)
-            exit(-1)
+    binData, numChannels, sampleRate, durationHeader, \
+    startTime, endTime = rawdat.readRawFile(rawFileName)
 
-        binDataSuccess = False
-        # !@#$%^&* Warning: assuming single channel only,
-        # eg: C0=1 C1=0 C2=0 C3=0 in the header.
-        # as Sasha Gavrilov suggested there are no data files
-        # with more than one channel
-        try:
-            binData = rawdat.readRawBinData(file, sampleRate, durationHeader)
-            binDataSuccess = True
-        except rawdat.IMOSAcousticRAWReadException as E:
-            # print(E)
-            exit(-1)
-        fileTailOffset = file.tell()
-
-        startTime, endTime = rawdat.readRawTimesFromFooter(file, fileTailOffset)
-        
-        # done reading input raw/.DAT file
-        file.close()
-
-        if binDataSuccess:
-            # write wav file
-            wav.writeMono16bit(log, rawFileName, sampleRate, binData)
+    if binData is not None:
+        # write wav file
+        wav.writeMono16bit(log, rawFileName, sampleRate, binData)
