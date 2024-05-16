@@ -8,6 +8,7 @@
             "name": "Python debug dat2wav.py 54842511.DAT",
             "type": "python",
             "request": "launch",
+            "preLaunchTask": "Build and locally pip install IMOSPATools python package",
             "program": "dat2wav.py",
             "args": [
                 "--debug",
