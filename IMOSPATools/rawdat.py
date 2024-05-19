@@ -88,7 +88,7 @@ def convertHeaderTime(line: str, timeLabel: str) -> datetime:
     if match:
         date_str, time_str = match.groups()
         dateTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
-        log.debug(f"\'{timeLabel}\' timestamp without sub-seconds is: {startTime}")
+        log.debug(f"\'{timeLabel}\' timestamp without sub-seconds is: {dateTime}")
     else:
         logMsg = f"\'{timeLabel}\' timestamp not found in Footer of file {file.name}. File corrupted?"
         log.error(logMsg)
@@ -97,7 +97,7 @@ def convertHeaderTime(line: str, timeLabel: str) -> datetime:
     match = re.search(REGEXP_SUBSECONDS, line)
     if match:
         dateTime += timedelta(seconds=float(match[1])/(float)(1<<16))
-        log.info(f"\'{timeLabel}\' timestamp is: {startTime}")
+        log.info(f"\'{timeLabel}\' timestamp is: {dateTime}")
     else:
         logMsg = f"\'{timeLabel}\' timestamp sub-seconds not found in Footer of file {file.name}. File corrupted?"
         log.error(logMsg)
@@ -244,48 +244,8 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
         log.debug(f'{lineNum} {line}')
         footer.append(line.decode("utf-8"))
 
-    regExpDatetime = r'(\d{4}/\d{2}/\d{2}) (\d{2}:\d{2}:\d{2})'
-    regExpSubseconds = r'(\d{5})$'
-
-    match = re.search(regExpDatetime, footer[1])
-    if match:
-        date_str, time_str = match.groups()
-        startTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
-        log.debug(f"\'First Data\' timestamp without sub-seconds is: {startTime}")
-    else:
-        logMsg = "First Data timestamp not found in Footer of file " + file.name + ". File corrupted?"
-        log.error(logMsg)
-        raise IMOSAcousticRAWReadException(logMsg)
-        return False
-    match = re.search(regExpSubseconds, footer[1])
-    if match:
-        startTime += timedelta(seconds=float(match[1])/(float)(1<<16))
-        log.info(f"\'First Data\' timestamp is: {startTime}")
-    else:
-        logMsg = "First Data timestamp sub-seconds not found in Footer of file " + file.name + ". File corrupted?"
-        log.error(logMsg)
-        raise IMOSAcousticRAWReadException(logMsg)
-        return False
-    
-    match = re.search(regExpDatetime, footer[2])
-    if match:
-        date_str, time_str = match.groups()
-        endTime = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M:%S")
-        log.debug(f"\'Finalised\' timestamp without sub-seconds is: {endTime}")
-    else:
-        logMsg = "Finalised timestamp not found in Footer of file " + file.name + ". File corrupted?"
-        log.error(logMsg)
-        raise IMOSAcousticRAWReadException(logMsg)
-        return False
-    match = re.search(regExpSubseconds, footer[2])
-    if match:
-        endTime += timedelta(seconds=float(match[1])/(float)(1<<16))
-        log.info(f"\'Finalised\' timestamp is: {endTime}")
-    else:
-        logMsg = "Finalised timestamp sub-seconds not found in Footer of file " + file.name + ". File corrupted?"
-        log.error(logMsg)
-        raise IMOSAcousticRAWReadException(logMsg)
-        return False
+    startTime = convertHeaderTime(footer[1], 'First Data')
+    endTime = convertHeaderTime(footer[2], 'Finalised')
 
     return startTime, endTime
 
@@ -297,14 +257,16 @@ def readRawFile(fileName: str) -> (numpy.ndarray, Tuple[int, float, float, datet
     :param fileName: file name (can be relative/full path) 
     
     :return: sampling rate
-    :return: audio data as numpy array
+    :return: audio data as numpy array (None if failed to read)
     :return: number of channels, sampling rate,
     :return: record duration as read from the header
     :return: record start time and end time from the footer, as datetime class        
     """
+    binData = None
+    
     with open(fileName, 'rb') as file:
         try:
-            numChannels, sampleRate, durationHeader = rawdat.readRawHeader(file)
+            numChannels, sampleRate, durationHeader = readRawHeaderEssentials(file)
         except IMOSAcousticRAWReadException as E:
             # print(E)
             exit(-1)
@@ -315,14 +277,13 @@ def readRawFile(fileName: str) -> (numpy.ndarray, Tuple[int, float, float, datet
         # as Sasha Gavrilov suggested there are no data files
         # with more than one channel
         try:
-            binData = rawdat.readRawBinData(file, sampleRate, durationHeader)
-            binDataSuccess = True
+            binData = readRawBinData(file, sampleRate, durationHeader)
         except IMOSAcousticRAWReadException as E:
             # print(E)
             exit(-1)
         fileTailOffset = file.tell()
 
-        startTime, endTime = rawdat.readRawTimesFromFooter(file, fileTailOffset)
+        startTime, endTime = readRawTimesFromFooter(file, fileTailOffset)
         
         # done reading input raw/.DAT file
         file.close()
