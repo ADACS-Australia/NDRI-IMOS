@@ -14,6 +14,7 @@ OVERLOAD_LOWER_BOUND: Final[int] = 50
 OVERLOAD_UPPER_BOUND: Final[int] = 65000
 FULLSCALE_VOLTS: Final[float] = 5.0
 
+
 class IMOSAcousticCalibException(Exception):
     pass
 
@@ -36,6 +37,7 @@ def countOverload(binData: numpy.ndarray) -> int:
 
     return count
 
+
 def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
     """
     Convert waw data to Volts
@@ -46,13 +48,30 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
     """
     # Multiply by this factor to convert A/D counts to volts 0-5
     countsToVolts = FULLSCALE_VOLTS/rawdat.BITS_PER_SAMPLE
-    voltsData[:] = (countsToVolts * binData[:]) - np.mean(binData[:] * countsToVolts)
+    voltsData[:] = (
+        (countsToVolts * binData[:])
+        - numpy.mean(binData[:] * countsToVolts)
+    )
 
     return voltsData
 
-def loadPrepCalibFile(calibFileName, cnl: float, hs: float)
 
-scipy.signal.welch(x, fs=1.0, window='hann', nperseg=None, noverlap=None, nfft=None, detrend='constant', return_onesided=True, scaling='density', axis=-1, average='mean')
+def loadPrepCalibFile(fileName: str,
+                      cnl: float,
+                      hs: float) -> (numpy.ndarray, Tuple[int, float, float, datetime, datetime]):
+    """
+    Load and pre-process calibration file
+    
+    :param fileName: file name (can be relative/full path)
+    :param binData: raw audio data
+    :return: audio data in Volts    
+    """
+    calBinData, numChannels, sampleRate, durationHeader, \
+    startTime, endTime = rawdat.readRawFile(fileName)
+    calSpec, calFreq = scipy.signal.welch(x, fs=1.0, window='hann', nperseg=None,
+            noverlap=None, nfft=None, detrend='constant', return_onesided=True,
+            scaling='density', axis=-1, average='mean')
+
 
 def calibrate(volts: numpy.ndarray, cnl: float, hs: float) -> numpy.ndarray:
     """
