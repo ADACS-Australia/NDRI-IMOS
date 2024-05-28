@@ -9,6 +9,7 @@ import logging
 
 from IMOSPATools import rawdat
 from IMOSPATools import wav
+from IMOSPATools import calibration
 
 log = logging.getLogger('IMOSPATools')
 
@@ -45,6 +46,15 @@ if __name__ == "__main__":
 
     binData, numChannels, sampleRate, durationHeader, \
     startTime, endTime = rawdat.readRawFile(rawFileName)
+    
+    # calibration code sketch
+    # # CalibFName = commandline parameter
+    # # cnl, hs - commandline params for now, later loaded from file (csv?)
+    # calSpec, calFreq, fSample = calibration.loadPrepCalibFile(CalibFName, cnl, hs)
+    # volts = calibration.toVolts(binData)
+    # calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
+    #
+    # TODO: shuffling with the signal before writing it to Wav file 
 
     if binData is not None:
         # write wav file
