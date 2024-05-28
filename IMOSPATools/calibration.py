@@ -49,8 +49,7 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
     # Multiply by this factor to convert A/D counts to volts 0-5
     countsToVolts = FULLSCALE_VOLTS/rawdat.BITS_PER_SAMPLE
     voltsData[:] = (
-        (countsToVolts * binData[:])
-        - numpy.mean(binData[:] * countsToVolts)
+        (countsToVolts * binData[:]) - numpy.mean(binData[:] * countsToVolts)
     )
 
     return voltsData
@@ -58,7 +57,7 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
 
 def loadPrepCalibFile(fileName: str,
                       cnl: float,
-                      hs: float) -> (numpy.ndarray, Tuple[int, float, float, datetime, datetime]):
+                      hs: float) -> (numpy.ndarray, numpy.ndarray, float):
     """
     Load and pre-process calibration file
     
@@ -66,21 +65,57 @@ def loadPrepCalibFile(fileName: str,
     :param binData: raw audio data
     :return: audio data in Volts    
     """
-    calBinData, numChannels, sampleRate, durationHeader, \
-    startTime, endTime = rawdat.readRawFile(fileName)
-    calSpec, calFreq = scipy.signal.welch(x, fs=1.0, window='hann', nperseg=None,
-            noverlap=None, nfft=None, detrend='constant', return_onesided=True,
-            scaling='density', axis=-1, average='mean')
+    calBinData, numChannels, sampleRate, durationHeader, startTime, endTime = rawdat.readRawFile(fileName)
+
+    # signal.welsh() estimates the power spectral density using welsh method,
+    # by dividing the data into segments and averaging periodograms computed
+    # on each segment
+    # scipy.signal.welch(x, fs=1.0, window='hann', nperseg=None, noverlap=None,
+    #       nfft=None, detrend='constant', return_onesided=True,
+    #       scaling='density', axis=-1, average='mean')
+    # assuming these defaults: noverlap=None, nfft=None, detrend='constant',
+    #       return_onesided=True, scaling='density', axis=-1, average='mean'
+    calSpec, calFreq = scipy.signal.welch(calBinData, sampleRate, window=sampleRate)
+
+    # apply an 51 th-order one-dimensional median filter
+    calSpec = scipy.signal.medfilt(calSpec, 51)
+    calSpec = calSpec / (10 ** (cnl/10)) * (10 ** (hs/10))
+
+    return calSpec, calFreq, sampleRate
 
 
-def calibrate(volts: numpy.ndarray, cnl: float, hs: float) -> numpy.ndarray:
+def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
+              calSpec: numpy.ndarray, calFreq: numpy.ndarray, fSample: float) -> numpy.ndarray:
     """
     calibrate sound record
-    
-    :param volts: audio data in Volts
+
+    :param volts: audio data/signal in Volts
     :param cnl: calibration noise level (dB re V^2/Hz)
-    :hydrophone sensitivity (dB re V/uPa) 
-    :return: calibrated audio data in Volts
+    :param hs: hydrophone sensitivity (dB re V/uPa)
+    :param calSpec: calibration spectrum
+    :param calFreq: calibration frequencies
+    :param fSample: sampling frequency of the recorder sensor
+    :return: calibrated audio signal
     """
-    
-    return calibData
+    # make high-pass filter to remove slow varying DC offset
+    b, a = scipy.signal.butter(5,5/fSample*2, btype='high', output='ba', fs=fSample)
+    # apply the filter on the input signal
+    signal = scipy.signal.lfilter(b, a, volts)
+
+    # make correction for calibration data to get signal amplitude in uPa:
+    spec = numpy.fft.fft(signal)
+    fmax = calFreq[len(calFreq) - 1]  
+    df = fmax * 2 / len(signal)
+    freqFFT = numpy.arange(0, fmax + df, df)
+    calSpecInt = numpy.interp(freqFFT, calFreq, calSpec)
+
+    # Ignore calibration values below 5 Hz to avoid inadequate correction
+    N5Hz = numpy.where(freqFFT <= 5)[0]
+    calSpecInt[N5Hz] = calSpecInt[N5Hz[-1]]
+
+    if numpy.floor(len(signal) / 2) == len(signal) / 2:
+        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[:-1], calSpecInt[::-1][1:]))))
+    else:
+        calibratedSignal = numpy.fft.ifft(Spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
+
+    return calibratedSignal
