@@ -22,6 +22,9 @@ def parseArgs():
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug', '-d', action='store_true', help='Enable debug mode')
     parser.add_argument('--filename', '-f', required=True, help='The name of the raw .DAT file to process.')
+    parser.add_argument('--calibrate', '-c', required=False, help='Calibrate, using calibration file')
+    parser.add_argument('--noise', '-n', required=False, help='Calibration noise level')
+    parser.add_argument('--sensitivity', '-s', required=False, help='Hydrophone sensitivity')
     args = parser.parse_args()
     return args
         
@@ -41,21 +44,36 @@ if __name__ == "__main__":
 
     rawFileName = args.filename
     if not os.path.exists(rawFileName):
-        log.error(f'File {rawFileName} not found!')
+        log.error(f'Raw dat file {rawFileName} not found!')
         exit(-1)
+
+    if args.calibrate is not None:
+        calibFileName = args.calibrate
+        if not os.path.exists(calibFileName):
+            log.error(f'Calibration file {calibFileName} not found!')
+            exit(-1)
+        if args.noise is None:
+            args.noise = -90.0
+        if args.sensitivity is None:
+            args.sensitivity = -197.9
 
     binData, numChannels, sampleRate, durationHeader, \
     startTime, endTime = rawdat.readRawFile(rawFileName)
     
-    # calibration code sketch
-    # # CalibFName = commandline parameter
-    # # cnl, hs - commandline params for now, later loaded from file (csv?)
-    # calSpec, calFreq, fSample = calibration.loadPrepCalibFile(CalibFName, cnl, hs)
-    # volts = calibration.toVolts(binData)
-    # calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
-    #
-    # TODO: shuffling with the signal before writing it to Wav file 
-
-    if binData is not None:
-        # write wav file
-        wav.writeMono16bit(log, rawFileName, sampleRate, binData)
+    # calibration 
+    if args.calibrate is not None:
+        # cnl, hs - commandline params for now, later loaded from file (csv?)
+        calSpec, calFreq, fSample = calibration.loadPrepCalibFile(
+            calibFileName, args.noise, args.sensitivity)
+        volts = calibration.toVolts(binData)
+        calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
+        # scaling of output wav file
+        scaleFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(calibratedSignal))))
+        scaledCalibSignal = calibratedSignal.scaleFactor
+        if scaledCalibSignal is not None:
+            # write calibrated wav file
+            wav.writeMono16bit(log, rawFileName, sampleRate, scaledCalibSignal)
+    else:
+        if binData is not None:
+            # write raw wav file
+            wav.writeMono16bit(log, rawFileName, sampleRate, binData)
