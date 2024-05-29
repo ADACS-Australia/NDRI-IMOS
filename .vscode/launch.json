@@ -13,7 +13,9 @@
             "args": [
                 "--debug",
                 "-f",
-                "54842511.DAT"
+                "54842511.DAT",
+                "-c",
+                "4C90331D.DAT"
             ],
             "console": "integratedTerminal",
             "cwd": "${fileDirname}"
