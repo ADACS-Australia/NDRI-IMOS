@@ -14,6 +14,8 @@ OVERLOAD_LOWER_BOUND: Final[int] = 50
 OVERLOAD_UPPER_BOUND: Final[int] = 65000
 FULLSCALE_VOLTS: Final[float] = 5.0
 
+log = logging.getLogger('IMOSPATools')
+
 
 class IMOSAcousticCalibException(Exception):
     pass
@@ -77,12 +79,16 @@ def loadPrepCalibFile(fileName: str,
     # the original Matlab code uses Hamming window of size equal to 1 second 
     #       (frequency in sampling scale)
     hammingWindow = scipy.signal.windows.hamming(round(sampleRate))
+    log.debug(f"hammingWindow size is: {hammingWindow.size}")
     calSpec, calFreq = scipy.signal.welch(calBinData, sampleRate, window=hammingWindow)
-
+    log.debug(f"calSpec size is: {calSpec.size}")
+    log.debug(f"calFreq size is: {calFreq.size}")
+    
     # apply an 51 th-order one-dimensional median filter
     calSpec = scipy.signal.medfilt(calSpec, 51)
     calSpec = calSpec / (10 ** (cnl/10)) * (10 ** (hs/10))
-
+    log.debug(f"calSpec scaled size is: {calSpec.size}")
+    
     return calSpec, calFreq, sampleRate
 
 
@@ -103,6 +109,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     b, a = scipy.signal.butter(5,5/fSample*2, btype='high', output='ba', fs=fSample)
     # apply the filter on the input signal
     signal = scipy.signal.lfilter(b, a, volts)
+    log.debug(f"filtered signal size is: {signal.size}")
 
     # make correction for calibration data to get signal amplitude in uPa:
     spec = numpy.fft.fft(signal)
@@ -119,5 +126,9 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[:-1], calSpecInt[::-1][1:]))))
     else:
         calibratedSignal = numpy.fft.ifft(Spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
+
+    log.debug(f"calibrated signal size is: {calibratedSignal.size}")
+    log.debug(f"calibrated signal sample type is: {calibratedSignal.dtype}")
+    log.debug(f"calibrated signal sample size is: {calibratedSignal.itemsize}")
 
     return calibratedSignal
