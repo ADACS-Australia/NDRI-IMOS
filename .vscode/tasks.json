@@ -4,7 +4,9 @@
       {
         "type": "shell",
         "label": "Build and locally pip install IMOSPATools python package",
-        "command": "python3 -m build; python3 -m pip install .",
+        // Important: must install -e (--editable) to enable debugger 
+        //            to trace into the pip package, installed in conda env!
+        "command": "python3 -m build; python3 -m pip install -e .",
         // "args": ["-m", "build"],
         // "options": {
         //   "cwd": "/usr/bin"
