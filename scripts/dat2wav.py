@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Tuple
 import _io
 import logging
+import numpy
 
 from IMOSPATools import rawdat
 from IMOSPATools import wav
@@ -27,9 +28,9 @@ def parseArgs():
     parser.add_argument('--calibrate', '-c', required=False, 
                         help='Calibrate, using calibration file')
     parser.add_argument('--noise', '-n', required=False, 
-                        help='Calibration noise level')
+                        help='Calibration noise level (cnl)')
     parser.add_argument('--sensitivity', '-s', required=False, 
-                        help='Hydrophone sensitivity')
+                        help='Hydrophone sensitivity (hs)')
     args = parser.parse_args()
     return args
         
@@ -65,17 +66,19 @@ if __name__ == "__main__":
     binData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(rawFileName)
 
-    # calibration 
+    # calibration
     if args.calibrate is not None:
         # cnl, hs - commandline params for now, later loaded from file (csv?)
-        calSpec, calFreq, fSample = calibration.loadPrepCalibFile(calibFileName,
-                                                                  args.noise,
-                                                                  args.sensitivity)
+        cnl = args.noise
+        hs = args.sensitivity
+        calSpec, calFreq, fSample = calibration.loadPrepCalibFile(calibFileName, cnl, hs)
         volts = calibration.toVolts(binData)
-        calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
+        calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq,fSample)
+        
         # scaling of output wav file
         scaleFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(calibratedSignal))))
-        scaledCalibSignal = calibratedSignal.scaleFactor
+        scaledCalibSignal = calibratedSignal/scaleFactor
+        
         if scaledCalibSignal is not None:
             # write calibrated wav file
             wav.writeMono16bit(log, rawFileName, sampleRate, scaledCalibSignal)

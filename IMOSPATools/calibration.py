@@ -48,9 +48,7 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
     """
     # Multiply by this factor to convert A/D counts to volts 0-5
     countsToVolts = FULLSCALE_VOLTS/rawdat.BITS_PER_SAMPLE
-    voltsData[:] = (
-        (countsToVolts * binData[:]) - numpy.mean(binData[:] * countsToVolts)
-    )
+    voltsData = (countsToVolts * binData[:]) - numpy.mean(binData[:] * countsToVolts)
 
     return voltsData
 
@@ -76,7 +74,10 @@ def loadPrepCalibFile(fileName: str,
     #       scaling='density', axis=-1, average='mean')
     # assuming these defaults: noverlap=None, nfft=None, detrend='constant',
     #       return_onesided=True, scaling='density', axis=-1, average='mean'
-    calSpec, calFreq = scipy.signal.welch(calBinData, sampleRate, window=sampleRate)
+    # the original Matlab code uses Hamming window of size equal to 1 second 
+    #       (frequency in sampling scale)
+    hammingWindow = scipy.signal.windows.hamming(round(sampleRate))
+    calSpec, calFreq = scipy.signal.welch(calBinData, sampleRate, window=hammingWindow)
 
     # apply an 51 th-order one-dimensional median filter
     calSpec = scipy.signal.medfilt(calSpec, 51)
