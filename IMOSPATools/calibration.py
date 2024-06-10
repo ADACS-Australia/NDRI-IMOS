@@ -65,7 +65,8 @@ def loadPrepCalibFile(fileName: str,
     :param binData: raw audio data
     :return: audio data in Volts    
     """
-    calBinData, numChannels, sampleRate, durationHeader, startTime, endTime = rawdat.readRawFile(fileName)
+    calBinData, numChannels, sampleRate, durationHeader, \
+        startTime, endTime = rawdat.readRawFile(fileName)
 
     # signal.welsh() estimates the power spectral density using welsh method,
     # by dividing the data into segments and averaging periodograms computed

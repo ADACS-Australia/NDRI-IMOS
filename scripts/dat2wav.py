@@ -20,24 +20,29 @@ log = logging.getLogger('IMOSPATools')
 
 def parseArgs():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--debug', '-d', action='store_true', help='Enable debug mode')
-    parser.add_argument('--filename', '-f', required=True, help='The name of the raw .DAT file to process.')
-    parser.add_argument('--calibrate', '-c', required=False, help='Calibrate, using calibration file')
-    parser.add_argument('--noise', '-n', required=False, help='Calibration noise level')
-    parser.add_argument('--sensitivity', '-s', required=False, help='Hydrophone sensitivity')
+    parser.add_argument('--debug', '-d', action='store_true', 
+                        help='Enable debug mode')
+    parser.add_argument('--filename', '-f', required=True, 
+                        help='The name of the raw .DAT file to process.')
+    parser.add_argument('--calibrate', '-c', required=False, 
+                        help='Calibrate, using calibration file')
+    parser.add_argument('--noise', '-n', required=False, 
+                        help='Calibration noise level')
+    parser.add_argument('--sensitivity', '-s', required=False, 
+                        help='Hydrophone sensitivity')
     args = parser.parse_args()
     return args
         
 if __name__ == "__main__":
     args = parseArgs()
-    
+
     # default logging level
     logLevel = logging.INFO
-    
+
     if args.debug:
         logLevel = logging.DEBUG
-    
-    logFormat = "[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s] %(levelname)s: %(message)s"    
+
+    logFormat = "[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s] %(levelname)s: %(message)s"
     logging.basicConfig(level=logLevel, format=logFormat,
                         #  seconds resolution is good enough for logging timestamp
                         datefmt='%Y-%m-%d %H:%M:%S')
@@ -58,13 +63,14 @@ if __name__ == "__main__":
             args.sensitivity = -197.9
 
     binData, numChannels, sampleRate, durationHeader, \
-    startTime, endTime = rawdat.readRawFile(rawFileName)
-    
+        startTime, endTime = rawdat.readRawFile(rawFileName)
+
     # calibration 
     if args.calibrate is not None:
         # cnl, hs - commandline params for now, later loaded from file (csv?)
-        calSpec, calFreq, fSample = calibration.loadPrepCalibFile(
-            calibFileName, args.noise, args.sensitivity)
+        calSpec, calFreq, fSample = calibration.loadPrepCalibFile(calibFileName,
+                                                                  args.noise,
+                                                                  args.sensitivity)
         volts = calibration.toVolts(binData)
         calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
         # scaling of output wav file
