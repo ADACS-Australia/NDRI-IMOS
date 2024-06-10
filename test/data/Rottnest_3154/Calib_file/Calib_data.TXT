@@ -1,2 +1,2 @@
-Cal level: -90 dB
+Cal level: -90
 Hydrophone sensitivity: -197.8
