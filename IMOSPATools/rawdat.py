@@ -250,7 +250,7 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
     return startTime, endTime
 
 
-def readRawFile(fileName: str) -> (numpy.ndarray, Tuple[int, float, float, datetime, datetime]):
+def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, datetime):
     """
     Read RAW file
         
