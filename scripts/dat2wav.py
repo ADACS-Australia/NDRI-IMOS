@@ -75,7 +75,7 @@ if __name__ == "__main__":
         hs = args.sensitivity
         calSpec, calFreq, fSample = calibration.loadPrepCalibFile(calibFileName, cnl, hs)
         volts = calibration.toVolts(binData)
-        calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq,fSample)
+        calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
 
         # scaling of output wav file
         scaleFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(calibratedSignal))))
