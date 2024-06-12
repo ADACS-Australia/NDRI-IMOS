@@ -105,10 +105,21 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     :param fSample: sampling frequency of the recorder sensor
     :return: calibrated audio signal
     """
+    # Sanity check of the input audio signal (parameter volts) for NaNs
+    if numpy.isnan(volts).any():
+        logMsg = "Audio signal in volts contains NaN value(s)"
+        log.error(logMsg)
+        raise IMOSAcousticCalibException(logMsg)
+    
     # make high-pass filter to remove slow varying DC offset
     b, a = scipy.signal.butter(5,5/fSample*2, btype='high', output='ba', fs=fSample)
     # apply the filter on the input signal
     signal = scipy.signal.lfilter(b, a, volts)
+    # Sanity check if filtered audio signal sill has no NaNs
+    if numpy.isnan(signal).any():
+        logMsg = "Audio signal in volts contains NaN value(s)"
+        log.error(logMsg)
+        raise IMOSAcousticCalibException(logMsg)
     log.debug(f"filtered signal size is: {signal.size}")
 
     # make correction for calibration data to get signal amplitude in uPa:
