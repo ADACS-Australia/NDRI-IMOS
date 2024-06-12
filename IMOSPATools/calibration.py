@@ -86,7 +86,7 @@ def loadPrepCalibFile(fileName: str,
     
     # apply an 51 th-order one-dimensional median filter
     calSpec = scipy.signal.medfilt(calSpec, 51)
-    calSpec = calSpec / (10 ** (cnl/10)) * (10 ** (hs/10))
+    calSpec = calSpec / (10.0 ** (cnl/10.0)) * (10.0 ** (hs/10.0))
     log.debug(f"calSpec scaled size is: {calSpec.size}")
     
     return calSpec, calFreq, sampleRate
@@ -112,7 +112,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         raise IMOSAcousticCalibException(logMsg)
     
     # make high-pass filter to remove slow varying DC offset
-    b, a = scipy.signal.butter(5,5/fSample*2, btype='high', output='ba', fs=fSample)
+    b, a = scipy.signal.butter(5, 5/fSample*2, btype='high', output='ba')
     # apply the filter on the input signal
     signal = scipy.signal.lfilter(b, a, volts)
     # Sanity check if filtered audio signal sill has no NaNs
@@ -127,19 +127,45 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     fmax = calFreq[len(calFreq) - 1]  
     df = fmax * 2 / len(signal)
     freqFFT = numpy.arange(0, fmax + df, df)
-    calSpecInt = numpy.interp(freqFFT, calFreq, calSpec)
+    # MC note: the numpy.interp() function has a different params order from
+    #          matlab function interp1()
+    calSpecInt = numpy.interp(freqFFT, calSpec, calFreq)
 
     # Ignore calibration values below 5 Hz to avoid inadequate correction
     N5Hz = numpy.where(freqFFT <= 5)[0]
     calSpecInt[N5Hz] = calSpecInt[N5Hz[-1]]
 
     if numpy.floor(len(signal) / 2) == len(signal) / 2:
-        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[:-1], calSpecInt[::-1][1:]))))
+        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[:-1], calSpecInt[::-1][1:])))).real
     else:
-        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
+        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:])))).real
 
     log.debug(f"calibrated signal size is: {calibratedSignal.size}")
     log.debug(f"calibrated signal sample type is: {calibratedSignal.dtype}")
-    log.debug(f"calibrated signal sample size is: {calibratedSignal.itemsize}")
+    log.debug(f"calibrated signal sample size is: {calibratedSignal.itemsize} bytes")
 
     return calibratedSignal
+
+
+def scaleToBinary(signal: numpy.ndarray, bitsPerSample: int) -> numpy.ndarray:
+    """
+    scaling of output for writing into wav file
+
+    :param signal: audio data/signal
+    :param bitsPerSample: bits per sample
+    :return: scaled audio signal
+    """
+    # scaling as per Sasha's matlab code
+    scaleFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(signal))))
+    scaledSignal = signal/scaleFactor
+    scaledMin = numpy.min(scaledSignal)
+    scaledMax = numpy.max(scaledSignal)
+    log.debug(f"Min sample value in the scaled signal is: {scaledMin}")
+    log.debug(f"Max sample value in the scaled signal is: {scaledMin}")
+
+    normalizedSignal = (scaledSignal - scaledMin) / (scaledMax - scaledMin) * 2 - 1
+    print((1 << (bitsPerSample - 2)) - 1)
+    signalBinFloat = normalizedSignal * 32767
+    roundedSignal = numpy.round(signalBinFloat)
+
+    return(roundedSignal)

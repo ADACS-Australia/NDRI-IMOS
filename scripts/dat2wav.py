@@ -67,6 +67,8 @@ if __name__ == "__main__":
         startTime, endTime = rawdat.readRawFile(rawFileName)
     log.debug(f"raw .DAT signal size is: {binData.size}")
     log.debug(f"raw .DAT signal type is: {type(binData)}")
+    log.debug(f"min bin value in raw .DAT signal size is: {numpy.min(binData)}")
+    log.debug(f"max bin value in raw .DAT signal size is: {numpy.max(binData)}")
 
     # calibration
     if args.calibrate is not None:
@@ -77,14 +79,13 @@ if __name__ == "__main__":
         volts = calibration.toVolts(binData)
         calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
 
-        # scaling of output wav file
-        scaleFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(calibratedSignal))))
-        scaledCalibSignal = calibratedSignal/scaleFactor
-        
+        scaledSignal = calibration.scaleToBinary(calibratedSignal, 16)
+        scaledCalibSignal = scaledSignal.astype(numpy.int16)
+
         log.debug(f"scaled calibrated signal size is: {scaledCalibSignal.size}")
         log.debug(f"scaled calibrated signal type is: {type(scaledCalibSignal)}")
         log.debug(f"scaled calibrated signal sample type is: {scaledCalibSignal.dtype}")
-        log.debug(f"scaled calibrated signal sample size is: {scaledCalibSignal.itemsize}")
+        log.debug(f"scaled calibrated signal sample size is: {scaledCalibSignal.itemsize} bytes")
 
         if scaledCalibSignal is not None:
             # write calibrated wav file
