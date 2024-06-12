@@ -125,7 +125,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     if numpy.floor(len(signal) / 2) == len(signal) / 2:
         calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[:-1], calSpecInt[::-1][1:]))))
     else:
-        calibratedSignal = numpy.fft.ifft(Spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
+        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
 
     log.debug(f"calibrated signal size is: {calibratedSignal.size}")
     log.debug(f"calibrated signal sample type is: {calibratedSignal.dtype}")
