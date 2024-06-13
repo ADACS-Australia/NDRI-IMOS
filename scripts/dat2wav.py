@@ -61,7 +61,7 @@ if __name__ == "__main__":
         if args.noise is None:
             args.noise = -90.0
         if args.sensitivity is None:
-            args.sensitivity = -197.9
+            args.sensitivity = -197.8
 
     binData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(rawFileName)
