@@ -28,7 +28,7 @@ def countOverload(binData: numpy.ndarray) -> int:
     In the original code, a window popped up with warning during
     the interactive method of loading and calibrating sound logger data
     ('Logger was overloaded - signal is clipped on all recorder channels')
-    
+
     :param binData: raw audio data
     :return: count of samples with overload
     """
@@ -44,7 +44,7 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
     """
     Convert waw data to Volts
     Modified Franks method
-    
+
     :param binData: raw audio data
     :return: audio data in Volts
     """
@@ -60,7 +60,7 @@ def loadPrepCalibFile(fileName: str,
                       hs: float) -> (numpy.ndarray, numpy.ndarray, float):
     """
     Load and pre-process calibration file
-    
+
     :param fileName: file name (can be relative/full path)
     :param binData: raw audio data
     :return: audio data in Volts    
@@ -83,12 +83,12 @@ def loadPrepCalibFile(fileName: str,
     calSpec, calFreq = scipy.signal.welch(calBinData, sampleRate, window=hammingWindow)
     log.debug(f"calSpec size is: {calSpec.size}")
     log.debug(f"calFreq size is: {calFreq.size}")
-    
+
     # apply an 51 th-order one-dimensional median filter
     calSpec = scipy.signal.medfilt(calSpec, 51)
     calSpec = calSpec / (10.0 ** (cnl/10.0)) * (10.0 ** (hs/10.0))
     log.debug(f"calSpec scaled size is: {calSpec.size}")
-    
+
     return calSpec, calFreq, sampleRate
 
 
@@ -110,7 +110,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         logMsg = "Audio signal in volts contains NaN value(s)"
         log.error(logMsg)
         raise IMOSAcousticCalibException(logMsg)
-    
+
     # make high-pass filter to remove slow varying DC offset
     b, a = scipy.signal.butter(5, 5/fSample*2, btype='high', output='ba')
     # apply the filter on the input signal
@@ -124,7 +124,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     # make correction for calibration data to get signal amplitude in uPa:
     spec = numpy.fft.fft(signal)
-    fmax = calFreq[len(calFreq) - 1]
+    fmax = calFreq[len(calFreq) - 1]  
     df = fmax * 2 / len(signal)
     freqFFT = numpy.arange(0, fmax + df, df)
     # MC note: the numpy.interp() function has a different params order from
