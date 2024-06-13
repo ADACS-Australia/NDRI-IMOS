@@ -124,7 +124,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     # make correction for calibration data to get signal amplitude in uPa:
     spec = numpy.fft.fft(signal)
-    fmax = calFreq[len(calFreq) - 1]  
+    fmax = calFreq[len(calFreq) - 1]
     df = fmax * 2 / len(signal)
     freqFFT = numpy.arange(0, fmax + df, df)
     # MC note: the numpy.interp() function has a different params order from
