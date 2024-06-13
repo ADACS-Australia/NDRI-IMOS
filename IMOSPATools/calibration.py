@@ -63,7 +63,7 @@ def loadPrepCalibFile(fileName: str,
 
     :param fileName: file name (can be relative/full path)
     :param binData: raw audio data
-    :return: audio data in Volts    
+    :return: audio data in Volts
     """
     calBinData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(fileName)
@@ -124,7 +124,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     # make correction for calibration data to get signal amplitude in uPa:
     spec = numpy.fft.fft(signal)
-    fmax = calFreq[len(calFreq) - 1]  
+    fmax = calFreq[len(calFreq) - 1]
     df = fmax * 2 / len(signal)
     freqFFT = numpy.arange(0, fmax + df, df)
     # MC note: the numpy.interp() function has a different params order from
