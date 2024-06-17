@@ -103,7 +103,7 @@ def convertHeaderTime(line: str, timeLabel: str) -> datetime:
         log.error(logMsg)
         raise IMOSAcousticRAWReadException(logMsg)
         return False
-    
+
     return dateTime
 
 
@@ -111,7 +111,7 @@ def readRawHeaderEssentials(file: _io.BufferedReader) -> Tuple[int, float, float
     """
     Read essential parameters from RAW file header
     Assumes file is already open!
-    
+
     :param file: already open file
     :return: number of channels, sampling rate, record duration
     """
@@ -134,7 +134,7 @@ def readRawHeaderEssentials(file: _io.BufferedReader) -> Tuple[int, float, float
     # regExp = r"Filter 0 C0=(\d+) C1=(\d+) LF=(\d+) HF=(\d+) PG=(\d+) G=(\d+)"
     # optimised - decode only what we need
     regExp = r"Filter [0,1] C[0-3]=(\d+) C[0-3]=(\d+)"
-    
+
     match = re.match(regExp, header[3])
     if match:
         isCh0 = int(match.group(1))
@@ -155,7 +155,7 @@ def readRawHeaderEssentials(file: _io.BufferedReader) -> Tuple[int, float, float
         raise IMOSAcousticRAWReadException(logMsg)
 
     numCh = isCh0 + isCh1 + isCh2 + isCh3
-    
+
     if numCh != 1:
         logMsg = f"Unexpected number of channels ({numCh}) in file {file.name}"
         log.error(logMsg)
@@ -170,7 +170,7 @@ def readRawBinData(file: _io.BufferedReader,
     """
     Read binary data block (audio recording) from RAW file
     Assumes file is already open!
-    
+
     :param file: already open file
     :return: sampling rate
     :return: record duration as read from the header 
@@ -197,7 +197,7 @@ def readRawBinData(file: _io.BufferedReader,
         log.error(logMsg)
         raise IMOSAcousticRAWReadException(logMsg)
         return False
-    
+
     # rewind the file to the position where the binary data tail begins
     file.seek(binDataTailPos, os.SEEK_SET)
 
@@ -215,11 +215,12 @@ def readRawBinData(file: _io.BufferedReader,
     return binData
 
 
-def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tuple[datetime, datetime]:
+def readRawTimesFromFooter(file: _io.BufferedReader,
+                           fileOffset: int = 0) -> Tuple[datetime, datetime]:
     """
     Read  from RAW file
     Assumes file is already open!
-    
+
     :param file: already open file
     :return: record start time and end time from the footer, as datetime class
     """
@@ -255,9 +256,9 @@ def readRawTimesFromFooter(file: _io.BufferedReader, fileOffset: int = 0) -> Tup
 def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, datetime):
     """
     Read RAW file
-        
+
     :param fileName: file name (can be relative/full path) 
-    
+
     :return: sampling rate
     :return: audio data as numpy array (None if failed to read)
     :return: number of channels, sampling rate,
@@ -265,7 +266,7 @@ def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, d
     :return: record start time and end time from the footer, as datetime class        
     """
     binData = None
-    
+
     with open(fileName, 'rb') as file:
         try:
             numChannels, sampleRate, durationHeader = readRawHeaderEssentials(file)
@@ -286,9 +287,8 @@ def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, d
         fileTailOffset = file.tell()
 
         startTime, endTime = readRawTimesFromFooter(file, fileTailOffset)
-        
+
         # done reading input raw/.DAT file
         file.close()
-        
+
         return binData, numChannels, sampleRate, durationHeader, startTime, endTime
-        
