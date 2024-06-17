@@ -164,7 +164,9 @@ def readRawHeaderEssentials(file: _io.BufferedReader) -> Tuple[int, float, float
     return numCh, rate, duration
 
 
-def readRawBinData(file: _io.BufferedReader, sampleRate: float, durationHeader: float) -> numpy.ndarray:
+def readRawBinData(file: _io.BufferedReader,
+                   sampleRate: float,
+                   durationHeader: float) -> numpy.ndarray:
     """
     Read binary data block (audio recording) from RAW file
     Assumes file is already open!
