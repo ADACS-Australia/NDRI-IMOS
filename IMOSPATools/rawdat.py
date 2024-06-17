@@ -173,7 +173,7 @@ def readRawBinData(file: _io.BufferedReader,
 
     :param file: already open file
     :return: sampling rate
-    :return: record duration as read from the header 
+    :return: record duration as read from the header
         (in reality little longer, need to scan for footer marker to figure out)
     :return: audio data as numpy array
     """
