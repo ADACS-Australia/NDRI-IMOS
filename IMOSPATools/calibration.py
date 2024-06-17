@@ -88,7 +88,7 @@ def loadPrepCalibFile(fileName: str,
     log.debug(f"calSpec size is: {calSpec.size}")
     log.debug(f"calFreq size is: {calFreq.size}")
 
-    # apply an 51 th-order one-dimensional median filter
+    # apply 51 th-order one-dimensional median filter
     calSpec = scipy.signal.medfilt(calSpec, 51)
     calSpec = calSpec / (10.0 ** (cnl/10.0)) * (10.0 ** (hs/10.0))
     log.debug(f"calSpec scaled size is: {calSpec.size}")
@@ -130,20 +130,39 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     spec = numpy.fft.fft(signal)
     fmax = calFreq[len(calFreq) - 1]
     df = fmax * 2 / len(signal)
+    # generate a set of frequencies as ndarray
     freqFFT = numpy.arange(0, fmax + df, df)
-    # MC note: the numpy.interp() function has a different params order from
-    #          matlab function interp1()
+    # MC note: the interpolation function numpy.interp() has a different
+    #          params order compared with matlab function interp1()
     calSpecInt = numpy.interp(freqFFT, calSpec, calFreq)
 
     # Ignore calibration values below 5 Hz to avoid inadequate correction
     N5Hz = numpy.where(freqFFT <= 5)[0]
     calSpecInt[N5Hz] = calSpecInt[N5Hz[-1]]
 
-    if numpy.floor(len(signal) / 2) == len(signal) / 2:
-        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[:-1], calSpecInt[::-1][1:])))).real
-    else:
-        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:])))).real
+    print(calSpecInt[82:86])
+    print(calSpecInt[-86:-82])
 
+    print(spec[:5])
+    print(spec[-5:])
+
+    print(spec[1:5])
+    print(spec[-5:-2])
+
+    # MC note max(calibratedSignal.imag) can be eg 8.443246102274315e-14, 
+    # so we cut off the imaginary component and use only real
+    if numpy.floor(len(signal) / 2) == len(signal) / 2:
+        # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:])))).real
+        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][:-1])))).real
+    else:
+        # TODO
+        # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:])))).real
+        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][:-1])))).real
+
+    print(calibratedSignal[:5])
+    print(calibratedSignal[-5:])
+    print(numpy.max(calibratedSignal.imag))
+    
     log.debug(f"calibrated signal size is: {calibratedSignal.size}")
     log.debug(f"calibrated signal sample type is: {calibratedSignal.dtype}")
     log.debug(f"calibrated signal sample size is: {calibratedSignal.itemsize} bytes")
