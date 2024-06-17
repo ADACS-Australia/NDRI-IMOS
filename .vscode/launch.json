@@ -13,9 +13,9 @@
             "args": [
                 "--debug",
                 "-f",
-                "501E9BF5.DAT",
+                "502DB01D.DAT",
                 "-c",
-                "502DB01D.DAT"
+                "501E9BF5.DAT"
             ],
             "console": "integratedTerminal",
             "cwd": "${fileDirname}"
