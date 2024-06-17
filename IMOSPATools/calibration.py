@@ -155,14 +155,13 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:])))).real
         calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][:-1])))).real
     else:
-        # TODO
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:])))).real
         calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][:-1])))).real
 
     print(calibratedSignal[:5])
     print(calibratedSignal[-5:])
     print(numpy.max(calibratedSignal.imag))
-    
+
     log.debug(f"calibrated signal size is: {calibratedSignal.size}")
     log.debug(f"calibrated signal sample type is: {calibratedSignal.dtype}")
     log.debug(f"calibrated signal sample size is: {calibratedSignal.itemsize} bytes")
