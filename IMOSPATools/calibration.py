@@ -62,8 +62,12 @@ def loadPrepCalibFile(fileName: str,
     Load and pre-process calibration file
 
     :param fileName: file name (can be relative/full path)
+    :param cnl: calibration noise level (dB re V^2/Hz)
+    :param hs: hydrophone sensitivity (dB re V/uPa)
     :param binData: raw audio data
-    :return: audio data in Volts
+    :return: calibration spectrum as numpy array
+    :return: calibration frequencies as numpy array
+    :return: sampling rate
     """
     calBinData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(fileName)
