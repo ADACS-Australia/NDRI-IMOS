@@ -83,8 +83,13 @@ def loadPrepCalibFile(fileName: str,
     # the original Matlab code uses Hamming window of size equal to 1 second 
     #       (frequency in sampling scale)
     hammingWindow = scipy.signal.windows.hamming(round(sampleRate))
+
+    # debugging...
     log.debug(f"hammingWindow size is: {hammingWindow.size}")
+
     calSpec, calFreq = scipy.signal.welch(calBinData, sampleRate, window=hammingWindow)
+
+    # debugging...
     log.debug(f"calSpec size is: {calSpec.size}")
     log.debug(f"calFreq size is: {calFreq.size}")
 
@@ -140,6 +145,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     N5Hz = numpy.where(freqFFT <= 5)[0]
     calSpecInt[N5Hz] = calSpecInt[N5Hz[-1]]
 
+    # debugging...
     print(calSpecInt[82:86])
     print(calSpecInt[-86:-82])
 
@@ -158,6 +164,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:])))).real
         calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][:-1])))).real
 
+    # debugging...
     print(calibratedSignal[:5])
     print(calibratedSignal[-5:])
     print(numpy.max(calibratedSignal.imag))
@@ -180,6 +187,8 @@ def scaleToBinary(signal: numpy.ndarray, bitsPerSample: int) -> numpy.ndarray:
     # scaling as per Sasha's matlab code
     scaleFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(signal))))
     scaledSignal = signal/scaleFactor
+
+    # debugging...
     scaledMin = numpy.min(scaledSignal)
     scaledMax = numpy.max(scaledSignal)
     log.debug(f"Min sample value in the scaled signal is: {scaledMin}")

@@ -65,6 +65,7 @@ if __name__ == "__main__":
 
     binData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(rawFileName)
+    # debugging...
     log.debug(f"raw .DAT signal size is: {binData.size}")
     log.debug(f"raw .DAT signal type is: {type(binData)}")
     log.debug(f"min bin value in raw .DAT signal size is: {numpy.min(binData)}")
@@ -82,6 +83,7 @@ if __name__ == "__main__":
         scaledSignal = calibration.scaleToBinary(calibratedSignal, 16)
         scaledCalibSignal = scaledSignal.astype(numpy.int16)
 
+        # debugging...
         log.debug(f"scaled calibrated signal size is: {scaledCalibSignal.size}")
         log.debug(f"scaled calibrated signal type is: {type(scaledCalibSignal)}")
         log.debug(f"scaled calibrated signal sample type is: {scaledCalibSignal.dtype}")
