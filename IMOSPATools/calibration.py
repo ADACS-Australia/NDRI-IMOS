@@ -72,6 +72,8 @@ def loadPrepCalibFile(fileName: str,
     calBinData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(fileName)
 
+    calVoltsData = toVolts(calBinData)
+
     # signal.welsh() estimates the power spectral density using welsh method,
     # by dividing the data into segments and averaging periodograms computed
     # on each segment
@@ -87,7 +89,7 @@ def loadPrepCalibFile(fileName: str,
     # debugging...
     log.debug(f"hammingWindow size is: {hammingWindow.size}")
 
-    calSpec, calFreq = scipy.signal.welch(calBinData, sampleRate, window=hammingWindow)
+    calSpec, calFreq = scipy.signal.welch(calVoltsData, sampleRate, window=hammingWindow)
 
     # debugging...
     log.debug(f"calSpec size is: {calSpec.size}")
