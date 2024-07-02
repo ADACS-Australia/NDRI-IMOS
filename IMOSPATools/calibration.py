@@ -49,8 +49,9 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
     :return: audio data in Volts
     """
     # Multiply by this factor to convert A/D counts to volts 0-5
-    countsToVolts = FULLSCALE_VOLTS/rawdat.BITS_PER_SAMPLE
-    voltsData = (countsToVolts * binData[:]) - numpy.mean(binData[:] * countsToVolts)
+    countsToVolts = FULLSCALE_VOLTS/(1 << rawdat.BITS_PER_SAMPLE)
+    offsetToVolts = numpy.mean(binData[:] * countsToVolts)
+    voltsData = (countsToVolts * binData[:]) - offsetToVolts
 
     return voltsData
 
