@@ -78,19 +78,27 @@ def loadPrepCalibFile(fileName: str,
     # signal.welsh() estimates the power spectral density using welsh method,
     # by dividing the data into segments and averaging periodograms computed
     # on each segment
-    # scipy.signal.welch(x, fs=1.0, window='hann', nperseg=None, noverlap=None,
-    #       nfft=None, detrend='constant', return_onesided=True,
+    # f, Pxx_spec = scipy.signal.welch(x, fs=1.0, window='hann', 
+    #       nperseg=None, noverlap=None, nfft=None,
+    #       detrend='constant', return_onesided=True,
     #       scaling='density', axis=-1, average='mean')
     # assuming these defaults: noverlap=None, nfft=None, detrend='constant',
     #       return_onesided=True, scaling='density', axis=-1, average='mean'
-    # the original Matlab code uses Hamming window of size equal to 1 second 
-    #       (frequency in sampling scale)
+    # the original Matlab code uses Hamming window of size equal to 1 second
+    #       (which equals to frequency in a discrete sampling scale)
+    #
+    # matlab welch func is: [pxx,f] = pwelch(x,window,noverlap,f,fs)
+    # sasha calls it as [Cal_spec,Cal_freq] = pwelch(Cal_sig,Fsamp,0,Fsamp,Fsamp);
+
+    # in scipy, we need to construct hamming window externally from the welch func:
     hammingWindow = scipy.signal.windows.hamming(round(sampleRate))
 
     # debugging...
     log.debug(f"hammingWindow size is: {hammingWindow.size}")
 
-    calSpec, calFreq = scipy.signal.welch(calVoltsData, sampleRate, window=hammingWindow)
+    # obviously, the parameters are mixed up, and even returned params 
+    # swapped Python v Matlab  
+    calFreq, calSpec = scipy.signal.welch(calVoltsData, sampleRate, window=hammingWindow)
 
     # debugging...
     log.debug(f"calSpec size is: {calSpec.size}")
@@ -169,11 +177,11 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     # debugging...
     print(calibratedSignal[:5])
     print(calibratedSignal[-5:])
-    
+
     maxAbsImaginary = numpy.max(numpy.abs(calibratedSignal.imag))
     logMsg = (f"Maximum absolute value of imaginary component of calibrated signal after IFFT: {maxAbsImaginary}")
     log.info(logMsg)
-        
+
     # Sanity check of the signal after IFFT - imaginary components of the signal shall be zero-ish
     if not numpy.allclose(calibratedSignal.imag, 0.0):
         logMsg = "Calibrated signal after IFFT contains non-zero imaginary component(s)"
