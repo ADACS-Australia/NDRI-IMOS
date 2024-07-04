@@ -92,6 +92,9 @@ if __name__ == "__main__":
         if scaledCalibSignal is not None:
             # write calibrated wav file
             wav.writeMono16bit(log, rawFileName, sampleRate, scaledCalibSignal)
+        else:
+            logMsg = "Something went wrong, there is no audio signal data to write to wav file."
+            log.error(logMsg)
     else:
         if binData is not None:
             # write raw wav file
