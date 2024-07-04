@@ -158,8 +158,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     print(spec[1:5])
     print(spec[-5:-2])
 
-    # MC note max(calibratedSignal.imag) can be eg 8.443246102274315e-14, 
-    # so we cut off the imaginary component and use only real
+    # MC note: we cut off the imaginary component and use only real
     if numpy.floor(len(signal) / 2) == len(signal) / 2:
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:])))).real
         calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][:-1])))).real
@@ -170,7 +169,16 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     # debugging...
     print(calibratedSignal[:5])
     print(calibratedSignal[-5:])
-    print(numpy.max(calibratedSignal.imag))
+    
+    maxAbsImaginary = numpy.max(numpy.abs(calibratedSignal.imag))
+    logMsg = (f"Maximum absolute value of imaginary component of calibrated signal after IFFT: {maxAbsImaginary}")
+    log.info(logMsg)
+        
+    # Sanity check of the signal after IFFT - imaginary components of the signal shall be zero-ish
+    if not numpy.allclose(calibratedSignal.imag, 0.0):
+        logMsg = "Calibrated signal after IFFT contains non-zero imaginary component(s)"
+        log.error(logMsg)
+        raise IMOSAcousticCalibException(logMsg)
 
     log.debug(f"calibrated signal size is: {calibratedSignal.size}")
     log.debug(f"calibrated signal sample type is: {calibratedSignal.dtype}")
