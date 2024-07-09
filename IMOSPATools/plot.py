@@ -4,7 +4,7 @@ from matplotlib.widgets import Slider
 
 
 plt.ion()
-plots = []
+fig, ax = plt.subplots()
 
 
 # Zoom functionality using the scroll wheel
@@ -34,15 +34,14 @@ def zoom(event):
 def plot1D(y: numpy.ndarray, xlim: int):
     x = numpy.arange(len(y))
 
-    fig, ax = plt.subplots()
-
     line, = ax.plot(x, y)
 
     # Set initial view limits
     if xlim is None:
         ax.set_xlim(0, len(y))
     else:
-        ax.set_xlim(0, xlim)
+        ax.set_xlim(xlim)
+
     ax.set_ylim(min(y), max(y))
 
     fig.canvas.mpl_connect('scroll_event', zoom)
