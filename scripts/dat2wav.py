@@ -13,6 +13,7 @@ from IMOSPATools import wav
 from IMOSPATools import calibration
 
 log = logging.getLogger('IMOSPATools')
+calibration.doWriteIntermediateResults = False
 
 # err codes
 # ERR_FooterNotFound = -2
@@ -21,16 +22,18 @@ log = logging.getLogger('IMOSPATools')
 
 def parseArgs():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--debug', '-d', action='store_true', 
+    parser.add_argument('--debug', '-d', action='store_true',
                         help='Enable debug mode')
-    parser.add_argument('--filename', '-f', required=True, 
+    parser.add_argument('--filename', '-f', required=True,
                         help='The name of the raw .DAT file to process.')
-    parser.add_argument('--calibrate', '-c', required=False, 
+    parser.add_argument('--calibrate', '-c', required=False,
                         help='Calibrate, using calibration file')
     parser.add_argument('--noise', '-n', required=False, 
                         help='Calibration noise level (cnl)')
-    parser.add_argument('--sensitivity', '-s', required=False, 
+    parser.add_argument('--sensitivity', '-s', required=False,
                         help='Hydrophone sensitivity (hs)')
+    parser.add_argument('--intermediate', '-i', action='store_true',
+                        help='write intermediate results as csv')
     args = parser.parse_args()
     return args
         
@@ -63,6 +66,9 @@ if __name__ == "__main__":
         if args.sensitivity is None:
             args.sensitivity = -197.8
 
+        if args.intermediate:
+            calibration.doWriteIntermediateResults = True
+
     binData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(rawFileName)
     # debugging...
@@ -82,6 +88,11 @@ if __name__ == "__main__":
 
         scaledSignal = calibration.scaleToBinary(calibratedSignal, 16)
         scaledCalibSignal = scaledSignal.astype(numpy.int16)
+        
+        if args.intermediate:
+            # WTF python you typeless language! 
+            # The print defaults to float even for an explicit int16!
+            numpy.savetxt('signal_final_16bit_int.txt', scaledCalibSignal, fmt='%d')
 
         # debugging...
         log.debug(f"scaled calibrated signal size is: {scaledCalibSignal.size}")

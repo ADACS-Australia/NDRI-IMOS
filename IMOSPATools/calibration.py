@@ -9,13 +9,14 @@ import logging
 from typing import Final
 
 from IMOSPATools import rawdat
+from IMOSPATools import plot
 
 OVERLOAD_LOWER_BOUND: Final[int] = 50
 OVERLOAD_UPPER_BOUND: Final[int] = 65000
 FULLSCALE_VOLTS: Final[float] = 5.0
 
 log = logging.getLogger('IMOSPATools')
-
+doWriteIntermediateResults = False
 
 class IMOSAcousticCalibException(Exception):
     pass
@@ -48,10 +49,19 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
     :param binData: raw audio data
     :return: audio data in Volts
     """
-    # Multiply by this factor to convert A/D counts to volts 0-5
+
+    if doWriteIntermediateResults:
+        numpy.savetxt('signal_binData.txt', binData, fmt='%d')
+        plot.plot1D(binData, 500)
+
+    # Multiply by this factor to convert A/D counts to volts 0.0..5.0V
     countsToVolts = FULLSCALE_VOLTS/(1 << rawdat.BITS_PER_SAMPLE)
     offsetToVolts = numpy.mean(binData[:] * countsToVolts)
     voltsData = (countsToVolts * binData[:]) - offsetToVolts
+
+    if doWriteIntermediateResults:
+        numpy.savetxt('signal_voltsData.txt', voltsData, fmt='%.5f')
+        plot.plot1D(voltsData, 500)
 
     return voltsData
 
@@ -73,7 +83,13 @@ def loadPrepCalibFile(fileName: str,
     calBinData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(fileName)
 
+    if doWriteIntermediateResults:
+        numpy.savetxt('calBinData.txt', calBinData, fmt='%d')
+
     calVoltsData = toVolts(calBinData)
+
+    if doWriteIntermediateResults:
+        numpy.savetxt('calVoltsData.txt', calVoltsData, fmt='%.5f')
 
     # signal.welsh() estimates the power spectral density using welsh method,
     # by dividing the data into segments and averaging periodograms computed
@@ -90,7 +106,9 @@ def loadPrepCalibFile(fileName: str,
     # matlab welch func is: [pxx,f] = pwelch(x,window,noverlap,f,fs)
     # sasha calls it as [Cal_spec,Cal_freq] = pwelch(Cal_sig,Fsamp,0,Fsamp,Fsamp);
 
-    # in scipy, we need to construct hamming window externally from the welch func:
+    # in scipy, we need to construct hamming window externally, as this is 
+    # not included in the welch() library function as in Matlab's pwelch()
+    # suing round to convert sampling rate to int as it is float.
     hammingWindow = scipy.signal.windows.hamming(round(sampleRate))
 
     # debugging...
@@ -100,16 +118,23 @@ def loadPrepCalibFile(fileName: str,
     # swapped Python v Matlab  
     calFreq, calSpec = scipy.signal.welch(calVoltsData, sampleRate, window=hammingWindow)
 
+    if doWriteIntermediateResults:
+        numpy.savetxt('calFreq.txt', calFreq, fmt='%.1f')
+        numpy.savetxt('calSpec.txt', calSpec, fmt='%.10f')
+
     # debugging...
     log.debug(f"calSpec size is: {calSpec.size}")
     log.debug(f"calFreq size is: {calFreq.size}")
 
     # apply 51 th-order one-dimensional median filter
-    calSpec = scipy.signal.medfilt(calSpec, 51)
-    calSpec = calSpec / (10.0 ** (cnl/10.0)) * (10.0 ** (hs/10.0))
+    calSpecFilt = scipy.signal.medfilt(calSpec, 51)
+    calSpecNoise = calSpecFilt / (10.0 ** (cnl/10.0)) * (10.0 ** (hs/10.0))
     log.debug(f"calSpec scaled size is: {calSpec.size}")
 
-    return calSpec, calFreq, sampleRate
+    if doWriteIntermediateResults:
+        numpy.savetxt('calSpecNoise.txt', calSpecNoise)
+
+    return calSpecNoise, calFreq, sampleRate
 
 
 def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
@@ -135,6 +160,10 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     b, a = scipy.signal.butter(5, 5/fSample*2, btype='high', output='ba')
     # apply the filter on the input signal
     signal = scipy.signal.lfilter(b, a, volts)
+
+    if doWriteIntermediateResults:
+        numpy.savetxt('signal_filtered.txt', signal, fmt='%.5f')
+
     # Sanity check if filtered audio signal sill has no NaNs
     if numpy.isnan(signal).any():
         logMsg = "Audio signal in volts contains NaN value(s)"
@@ -192,6 +221,9 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     log.debug(f"calibrated signal sample type is: {calibratedSignal.dtype}")
     log.debug(f"calibrated signal sample size is: {calibratedSignal.itemsize} bytes")
 
+    if doWriteIntermediateResults:
+        numpy.savetxt('signal_calibrated.txt', calibratedSignal)
+
     return calibratedSignal
 
 
@@ -211,11 +243,14 @@ def scaleToBinary(signal: numpy.ndarray, bitsPerSample: int) -> numpy.ndarray:
     scaledMin = numpy.min(scaledSignal)
     scaledMax = numpy.max(scaledSignal)
     log.debug(f"Min sample value in the scaled signal is: {scaledMin}")
-    log.debug(f"Max sample value in the scaled signal is: {scaledMin}")
+    log.debug(f"Max sample value in the scaled signal is: {scaledMax}")
 
     normalizedSignal = (scaledSignal - scaledMin) / (scaledMax - scaledMin) * 2 - 1
     print((1 << (bitsPerSample - 2)) - 1)
     signalBinFloat = normalizedSignal * 32767
     roundedSignal = numpy.round(signalBinFloat)
+
+    if doWriteIntermediateResults:
+        numpy.savetxt('signal_scaled_normalised.txt', roundedSignal)
 
     return(roundedSignal)
