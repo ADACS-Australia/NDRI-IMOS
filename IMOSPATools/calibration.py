@@ -9,7 +9,7 @@ import logging
 from typing import Final
 
 from IMOSPATools import rawdat
-from IMOSPATools import plot
+from IMOSPATools import diag_plot
 
 OVERLOAD_LOWER_BOUND: Final[int] = 50
 OVERLOAD_UPPER_BOUND: Final[int] = 65000
@@ -52,7 +52,7 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_binData.txt', binData, fmt='%d')
-        plot.dp.add_plot(binData, "Original Signal bin data", 500)
+        diag_plot.dp.add_plot(binData, "Original Signal bin data", 500)
 
     # Multiply by this factor to convert A/D counts to volts 0.0..5.0V
     countsToVolts = FULLSCALE_VOLTS/(1 << rawdat.BITS_PER_SAMPLE)
@@ -61,7 +61,7 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_voltsData.txt', voltsData, fmt='%.5f')
-        plot.dp.add_plot(voltsData, "Original Signal Volts")
+        diag_plot.dp.add_plot(voltsData, "Original Signal Volts")
 
     return voltsData
 
@@ -85,13 +85,13 @@ def loadPrepCalibFile(fileName: str,
 
     if doWriteIntermediateResults:
         numpy.savetxt('calBinData.txt', calBinData, fmt='%d')
-        plot.dp.add_plot(calBinData, "Calibration Signal binary")
+        diag_plot.dp.add_plot(calBinData, "Calibration Signal binary")
 
     calVoltsData = toVolts(calBinData)
 
     if doWriteIntermediateResults:
         numpy.savetxt('calVoltsData.txt', calVoltsData, fmt='%.5f')
-        plot.dp.add_plot(calBinData, "Calibration Signal Volts")
+        diag_plot.dp.add_plot(calBinData, "Calibration Signal Volts")
 
     # signal.welsh() estimates the power spectral density using welsh method,
     # by dividing the data into segments and averaging periodograms computed
@@ -165,7 +165,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_filtered.txt', signal, fmt='%.5f')
-        plot.dp.add_plot(signal, "Filtered Signal Volts")
+        diag_plot.dp.add_plot(signal, "Filtered Signal Volts")
 
     # Sanity check if filtered audio signal sill has no NaNs
     if numpy.isnan(signal).any():
@@ -227,7 +227,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_calibrated.txt', calibratedSignal)
-        plot.dp.add_plot(calibratedSignal, "Calibrated Signal after IFFT")
+        diag_plot.dp.add_plot(calibratedSignal, "Calibrated Signal after IFFT")
 
     return calibratedSignal
 
@@ -257,6 +257,6 @@ def scaleToBinary(signal: numpy.ndarray, bitsPerSample: int) -> numpy.ndarray:
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_scaled_normalised.txt', roundedSignal)
-        plot.dp.add_plot(roundedSignal, "Calibrated Scaled Normalised Signal")
+        diag_plot.dp.add_plot(roundedSignal, "Calibrated Scaled Normalised Signal")
 
     return(roundedSignal)

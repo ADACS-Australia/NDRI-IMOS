@@ -26,7 +26,7 @@ class DiagnosticPlots:
     def _update_radio(self):
         if self.radio:
             self.ax_radio.clear()
-        plot_titles = [plot[2] for plot in self.plots]
+        plot_titles = [diag_plot[2] for diag_plot in self.plots]
         self.radio = RadioButtons(self.ax_radio, plot_titles)
         self.radio.on_clicked(self._radio_clicked)
 
