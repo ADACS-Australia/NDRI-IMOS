@@ -35,5 +35,5 @@ Build and installation from this github repository
 
       from IMOSPATools import ...
 
-   (See `test_sft_beans.py <tests/test_sft_beans.py>`_.)
+   (See `dat2wav.py <scripts/dat2wav.py>`_.)
 
