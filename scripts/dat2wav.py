@@ -11,7 +11,7 @@ import numpy
 from IMOSPATools import rawdat
 from IMOSPATools import wav
 from IMOSPATools import calibration
-from IMOSPATools.plot import dp
+from IMOSPATools import plot
 
 log = logging.getLogger('IMOSPATools')
 calibration.doWriteIntermediateResults = False
@@ -95,8 +95,8 @@ if __name__ == "__main__":
             # WTF python you typeless language! 
             # The print defaults to float even for an explicit int16!
             numpy.savetxt('signal_final_16bit_int.txt', scaledCalibSignal, fmt='%d')
-            dp.add_plot(scaledCalibSignal, "Signal final 16bit")
-            dp.show()
+            plot.dp.add_plot(scaledCalibSignal, "Signal final 16bit")
+            plot.dp.show()
             
         # debugging...
         log.debug(f"scaled calibrated signal size is: {scaledCalibSignal.size}")

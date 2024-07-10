@@ -72,5 +72,5 @@ class DiagnosticPlots:
         self.ax_plot.set_ylim([ydata - new_height * (1-rely), ydata + new_height * rely])
         self.fig.canvas.draw_idle()
 
-# globals hack
+# Make the class instance global, using Module-Level Singleton
 dp = DiagnosticPlots()
