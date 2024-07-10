@@ -45,4 +45,4 @@ Based on matlab code modules of CHORUS software by Alexander N. Gavrilov.
 Build and installation from this github repository
 --------------------------------------------------
 
-[BUILD]<BUILD.rst>)
+[BUILD]<BUILD.rst>
