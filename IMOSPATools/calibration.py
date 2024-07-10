@@ -9,7 +9,7 @@ import logging
 from typing import Final
 
 from IMOSPATools import rawdat
-from IMOSPATools import plot
+from IMOSPATools.plot import dp
 
 OVERLOAD_LOWER_BOUND: Final[int] = 50
 OVERLOAD_UPPER_BOUND: Final[int] = 65000
@@ -52,7 +52,7 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_binData.txt', binData, fmt='%d')
-        plot.plot1D(binData, 500)
+        dp.add_plot(binData, "Original Signal bin data", 500)
 
     # Multiply by this factor to convert A/D counts to volts 0.0..5.0V
     countsToVolts = FULLSCALE_VOLTS/(1 << rawdat.BITS_PER_SAMPLE)
@@ -61,7 +61,7 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_voltsData.txt', voltsData, fmt='%.5f')
-        plot.plot1D(voltsData, 500)
+        dp.add_plot(voltsData, "Original Signal Volts")
 
     return voltsData
 
@@ -85,11 +85,13 @@ def loadPrepCalibFile(fileName: str,
 
     if doWriteIntermediateResults:
         numpy.savetxt('calBinData.txt', calBinData, fmt='%d')
+        dp.add_plot(calBinData, "Calibration Signal binary")
 
     calVoltsData = toVolts(calBinData)
 
     if doWriteIntermediateResults:
         numpy.savetxt('calVoltsData.txt', calVoltsData, fmt='%.5f')
+        dp.add_plot(calBinData, "Calibration Signal Volts")
 
     # signal.welsh() estimates the power spectral density using welsh method,
     # by dividing the data into segments and averaging periodograms computed
@@ -163,6 +165,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_filtered.txt', signal, fmt='%.5f')
+        dp.add_plot(signal, "Filtered Signal Volts")
 
     # Sanity check if filtered audio signal sill has no NaNs
     if numpy.isnan(signal).any():
@@ -207,9 +210,10 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     print(calibratedSignal[:5])
     print(calibratedSignal[-5:])
 
-    maxAbsImaginary = numpy.max(numpy.abs(calibratedSignal.imag))
-    logMsg = (f"Maximum absolute value of imaginary component of calibrated signal after IFFT: {maxAbsImaginary}")
-    log.info(logMsg)
+    # ## THIS DIAGNOSTIC CODE MAKES SENSE ONLY WHEN WE DON OT PICK ONLY REAL COMPONENT ABOVE
+    # maxAbsImaginary = numpy.max(numpy.abs(calibratedSignal.imag))
+    # logMsg = (f"Maximum absolute value of imaginary component of calibrated signal after IFFT: {maxAbsImaginary}")
+    # log.info(logMsg)
 
     # Sanity check of the signal after IFFT - imaginary components of the signal shall be zero-ish
     if not numpy.allclose(calibratedSignal.imag, 0.0):
@@ -223,6 +227,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_calibrated.txt', calibratedSignal)
+        dp.add_plot(calibratedSignal, "Calibrated Signal after IFFT")
 
     return calibratedSignal
 
@@ -252,5 +257,6 @@ def scaleToBinary(signal: numpy.ndarray, bitsPerSample: int) -> numpy.ndarray:
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_scaled_normalised.txt', roundedSignal)
+        dp.add_plot(roundedSignal, "Calibrated Scaled Normalised Signal")
 
     return(roundedSignal)
