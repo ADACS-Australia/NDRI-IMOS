@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python debug dat2wav.py 54842511.DAT",
+            "name": "Python debug dat2wav.py",
             "type": "python",
             "request": "launch",
             "preLaunchTask": "Build and locally pip install IMOSPATools python package",
