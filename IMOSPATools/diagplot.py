@@ -1,6 +1,6 @@
 import numpy
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
+# from matplotlib.widgets import Slider
 from matplotlib.widgets import RadioButtons
 
 
@@ -71,6 +71,7 @@ class DiagnosticPlots:
         self.ax_plot.set_xlim([xdata - new_width * (1-relx), xdata + new_width * relx])
         self.ax_plot.set_ylim([ydata - new_height * (1-rely), ydata + new_height * rely])
         self.fig.canvas.draw_idle()
+
 
 # Make the class instance global, using Module-Level Singleton
 dp = DiagnosticPlots()
