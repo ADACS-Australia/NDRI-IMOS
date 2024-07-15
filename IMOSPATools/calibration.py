@@ -51,7 +51,7 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
         # diagplot.dp.show()
 
     # Multiply by this factor to convert A/D counts to volts 0.0..5.0V
-    countsToVolts = FULLSCALE_VOLTS/(1 << rawdat.BITS_PER_SAMPLE)
+    countsToVolts = FULLSCALE_VOLTS / (1 << rawdat.BITS_PER_SAMPLE)
     offsetToVolts = numpy.mean(binData[:] * countsToVolts)
     voltsData = (countsToVolts * binData[:]) - offsetToVolts
 
@@ -112,12 +112,12 @@ def loadPrepCalibFile(fileName: str,
     # debugging...
     log.debug(f"hammingWindow size is: {hammingWindow.size}")
 
-    # obviously, the parameters are mixed up, and even returned params 
-    # swapped Python v Matlab  
+    # obviously, the parameters are mixed up, and even returned params
+    # swapped Python v Matlab
     calFreq, calSpec = scipy.signal.welch(calVoltsData, sampleRate, window=hammingWindow)
 
     if doWriteIntermediateResults:
-        numpy.savetxt('calFreq.txt', calFreq, fmt='%.1f')
+        numpy.savetxt('calFreq.txt', calFreq, fmt='%.2f')
         numpy.savetxt('calSpec.txt', calSpec, fmt='%.10f')
 
     # debugging...
@@ -130,6 +130,7 @@ def loadPrepCalibFile(fileName: str,
     log.debug(f"calSpec scaled size is: {calSpec.size}")
 
     if doWriteIntermediateResults:
+        numpy.savetxt('calSpecFilt.txt', calSpecFilt)
         numpy.savetxt('calSpecNoise.txt', calSpecNoise)
 
     return calSpecNoise, calFreq, sampleRate
@@ -178,11 +179,16 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     freqFFT = numpy.arange(0, fmax + df, df)
     # MC note: the interpolation function numpy.interp() has a different
     #          params order compared with matlab function interp1()
-    calSpecInt = numpy.interp(freqFFT, calSpec, calFreq)
+    calSpecInt = numpy.interp(freqFFT, calFreq, calSpec)
 
     # Ignore calibration values below 5 Hz to avoid inadequate correction
     N5Hz = numpy.where(freqFFT <= 5)[0]
     calSpecInt[N5Hz] = calSpecInt[N5Hz[-1]]
+
+    if doWriteIntermediateResults:
+        numpy.savetxt('spec.txt', spec, fmt='%.10f')
+        numpy.savetxt('freq_fft.txt', freqFFT, fmt='%.3f')
+        numpy.savetxt('calSpecInt.txt', calSpecInt)
 
     # debugging...
     print(calSpecInt[82:86])
@@ -194,7 +200,9 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     print(spec[1:5])
     print(spec[-5:-2])
 
-    # MC note: we cut off the imaginary component and use only real
+    # MC note: we cut off the imaginary component and use only real,
+    #          as python math libs leave non-zero imaginary component
+    #          artifacts - a consequnece of floats implementation
     if numpy.floor(len(signal) / 2) == len(signal) / 2:
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:])))).real
         calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][:-1])))).real
@@ -237,22 +245,26 @@ def scaleToBinary(signal: numpy.ndarray, bitsPerSample: int) -> numpy.ndarray:
     :return: scaled audio signal
     """
     # scaling as per Sasha's matlab code
-    scaleFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(signal))))
-    scaledSignal = signal/scaleFactor
+    normaliseFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(signal))))
+    normalisedSignal = signal / normaliseFactor
+
+    if doWriteIntermediateResults:
+        numpy.savetxt('signal_normalised.txt', normalisedSignal)
+        # diagplot.dp.add_plot(calibratedSignal, "Calibrated Signal after IFFT")
 
     # debugging...
-    scaledMin = numpy.min(scaledSignal)
-    scaledMax = numpy.max(scaledSignal)
-    log.debug(f"Min sample value in the scaled signal is: {scaledMin}")
-    log.debug(f"Max sample value in the scaled signal is: {scaledMax}")
+    normalisedMin = numpy.min(normalisedSignal)
+    normalisedMax = numpy.max(normalisedSignal)
+    log.debug(f"Min sample value in the normalised signal is: {normalisedMin}")
+    log.debug(f"Max sample value in the normalised signal is: {normalisedMax}")
 
-    normalizedSignal = (scaledSignal - scaledMin) / (scaledMax - scaledMin) * 2 - 1
-    print((1 << (bitsPerSample - 2)) - 1)
-    signalBinFloat = normalizedSignal * 32767
+    normalizedSignal = (normalisedSignal - normalisedMin) / (normalisedMax - normalisedMin) * 2 - 1
+    toInt16Factor = ((1 << (bitsPerSample - 1)) - 1)
+    signalBinFloat = normalizedSignal * toInt16Factor
     roundedSignal = numpy.round(signalBinFloat)
 
     if doWriteIntermediateResults:
-        numpy.savetxt('signal_scaled_normalised.txt', roundedSignal)
+        numpy.savetxt('signal_scaled.txt', roundedSignal)
         # diagplot.dp.add_plot(roundedSignal, "Calibrated Scaled Normalised Signal")
 
     return(roundedSignal)
