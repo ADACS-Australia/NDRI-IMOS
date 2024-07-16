@@ -203,8 +203,8 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     print(spec[-5:-2])
 
     # Inverse FFT - different subscripting for evan and odd number of signal samples
-    if numpy.floor(len(signal) / 2) == len(signal) / 2:
-    #if len(signal) % 2 == 0:
+    # if numpy.floor(len(signal) / 2) == len(signal) / 2:
+    if len(signal) % 2 == 0:
         # off mumber of samples
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:]))))
         calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][:-1]))))
