@@ -185,7 +185,6 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     calSpecInt[N5Hz] = calSpecInt[N5Hz[-1]]
 
     if doWriteIntermediateResults:
-        numpy.savetxt('spec.txt', spec, fmt='%.10f')
         numpy.savetxt('freq_fft.txt', freqFFT, fmt='%.3f')
         numpy.savetxt('calSpecInt.txt', calSpecInt)
 
@@ -194,19 +193,23 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     print(calSpecInt[-86:-82])
 
     spec = numpy.fft.fft(signal)
+    if doWriteIntermediateResults:
+        numpy.savetxt('spec.txt', spec, fmt='%.10f')
+        
     print(spec[:5])
     print(spec[-5:])
 
     print(spec[1:5])
     print(spec[-5:-2])
 
-    # MC note: we cut off the imaginary component and use only real,
-    #          as python math libs leave non-zero imaginary component
-    #          artifacts - a consequnece of floats implementation
+    # Inverse FFT - different subscripting for evan and odd number of signal samples
     if numpy.floor(len(signal) / 2) == len(signal) / 2:
+    #if len(signal) % 2 == 0:
+        # off mumber of samples
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:]))))
         calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][:-1]))))
     else:
+        # even mumber of samples
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
         calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][:-1]))))
 
@@ -219,8 +222,12 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     if not numpy.allclose(calibratedSignal.imag, 0.0):
         logMsg = "Calibrated signal after IFFT contains non-zero imaginary component(s)"
         log.error(logMsg)
+        log.error(f"imag max = {max(numpy.absolute(calibratedSignal.imag))}")
         raise IMOSAcousticCalibException(logMsg)
 
+    # MC note: we cut off the imaginary component and use only real,
+    #          as python math libs leave non-zero imaginary component
+    #          artifacts - a consequnece of floats implementation
     calibratedSignal = calibratedSignal.real
 
     # debugging...
