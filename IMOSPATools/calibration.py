@@ -204,15 +204,11 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     #          as python math libs leave non-zero imaginary component
     #          artifacts - a consequnece of floats implementation
     if numpy.floor(len(signal) / 2) == len(signal) / 2:
-        # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:])))).real
-        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][:-1])))).real
+        # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:]))))
+        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][:-1]))))
     else:
-        # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:])))).real
-        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][:-1])))).real
-
-    # debugging...
-    print(calibratedSignal[:5])
-    print(calibratedSignal[-5:])
+        # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
+        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][:-1]))))
 
     # ## THIS DIAGNOSTIC CODE MAKES SENSE ONLY WHEN WE DON OT PICK ONLY REAL COMPONENT ABOVE
     # maxAbsImaginary = numpy.max(numpy.abs(calibratedSignal.imag))
@@ -224,6 +220,12 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         logMsg = "Calibrated signal after IFFT contains non-zero imaginary component(s)"
         log.error(logMsg)
         raise IMOSAcousticCalibException(logMsg)
+
+    calibratedSignal = calibratedSignal.real
+
+    # debugging...
+    print(calibratedSignal[:5])
+    print(calibratedSignal[-5:])
 
     log.debug(f"calibrated signal size is: {calibratedSignal.size}")
     log.debug(f"calibrated signal sample type is: {calibratedSignal.dtype}")
