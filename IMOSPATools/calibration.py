@@ -172,7 +172,6 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     log.debug(f"filtered signal size is: {signal.size}")
 
     # make correction for calibration data to get signal amplitude in uPa:
-    spec = numpy.fft.fft(signal)
     fmax = calFreq[len(calFreq) - 1]
     df = fmax * 2 / len(signal)
     # generate a set of frequencies as ndarray
@@ -194,6 +193,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     print(calSpecInt[82:86])
     print(calSpecInt[-86:-82])
 
+    spec = numpy.fft.fft(signal)
     print(spec[:5])
     print(spec[-5:])
 
