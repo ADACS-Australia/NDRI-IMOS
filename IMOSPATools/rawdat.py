@@ -181,7 +181,7 @@ def readRawBinData(file: _io.BufferedReader,
     log.debug(f'numSamplesHeader is {numSamplesHeader}')
 
     # read the nominal chunk of sound record as numpy array of int16
-    binData = numpy.frombuffer(file.read(numSamplesHeader * numpy.dtype(numpy.int16).itemsize), dtype=numpy.int16)
+    binData = numpy.frombuffer(file.read(numSamplesHeader * numpy.dtype(numpy.uint16).itemsize), dtype=numpy.uint16)
     log.debug(f'Size of read bin data as per header numpy array is {binData.size}')
 
     # store the position where the binary data tail begins
