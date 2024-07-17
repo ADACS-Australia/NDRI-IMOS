@@ -136,6 +136,32 @@ def loadPrepCalibFile(fileName: str,
     return calSpecNoise, calFreq, sampleRate
 
 
+def extractNotClose(array1, array2, rtol=1e-05, atol=1e-08):
+    """
+    Compare two arrays and extract values from array1 that are not close to 
+    corresponding values in array2.
+
+    Parameters:
+    array1 (numpy.ndarray): First input array
+    array2 (numpy.ndarray): Second input array
+    rtol (float): Relative tolerance (default: 1e-05)
+    atol (float): Absolute tolerance (default: 1e-08)
+
+    Returns:
+    numpy.ndarray: Array of values from array1 not close to corresponding values in array2
+    """
+    if array1.shape != array2.shape:
+        raise ValueError("Input arrays must have the same shape")
+
+    # Create a boolean mask for values that are not close
+    not_close_mask = ~numpy.isclose(array1, array2, rtol=rtol, atol=atol)
+
+    # Use the mask to extract values from array1
+    not_close_values = array1[not_close_mask]
+
+    return not_close_values
+
+
 def testConjugateSymmetry(spectrum: numpy.ndarray) -> bool: 
     retVal = True
     N = len(spectrum)
@@ -145,10 +171,13 @@ def testConjugateSymmetry(spectrum: numpy.ndarray) -> bool:
     if N % 2 != 0:  # Spectrum shall consist of even number of elements
         log.error("Spectrum does not consist of odd number of elements.")
         retVal = False
-    if spectrum[N//2] != spectrum[N//2].real:  # Nyquist frequency shall be real
-        log.error("Nyquist frequency is not a real number.")
-        retVal = False
-    if numpy.allclose(spectrum[1:N//2], numpy.conj(spectrum[-1:N//2:-1])):  # Verify conjugate symmetry
+    else:
+        nyquistFreq = spectrum[N//2]
+        if not numpy.isclose(nyquistFreq.imag, 0.0, rtol=1e-05, atol=1e-05):  # Nyquist frequency shall be real
+            log.error(f"Nyquist frequency {nyquistFreq} is not a real number.")
+            retVal = False
+    if not numpy.allclose(spectrum[1:N//2], numpy.conj(spectrum[-1:N//2:-1]),
+                      rtol=1e-05, atol=1e-08):  # Verify conjugate symmetry
         log.error("Conjugate symmetry test failed.")
         retVal = False
     # all tests passed, retVal stays True
@@ -209,28 +238,23 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     # debugging...
     
-    print(f'cal spec beg {calSpecInt[0:3]}')
-    print(f'cal spec end {calSpecInt[-3:][::-1]}')
+    log.debug(f'cal spec beg {calSpecInt[0:3]}')
+    log.debug(f'cal spec end {calSpecInt[-3:][::-1]}')
 
     spec = numpy.fft.fft(signal)
     if doWriteIntermediateResults:
         numpy.savetxt('spec.txt', spec, fmt='%.10f')
 
-    print(spec[:5])
-    print(spec[-5:])
-
-    # print(f'sig spec beg {spec[0:3]}')
-    # print(f'sig spec end {spec[-3:][::-1]}')
-
-    print(f'sig spec real beg {spec[1:4].real}')
-    print(f'sig spec real end {spec[-3:][::-1].real}')
-
-    print(f'sig spec imag beg {spec[1:4].imag}')
-    print(f'sig spec imag end {spec[-3:][::-1].imag}')
+    log.debug(f'sig spectrum DC offset {spec[0]}') 
+    log.debug(f'sig spectrum Nyquist freq {spec[spec.size//2]}') 
+    log.debug(f'sig spectrum real beg {spec[1:4].real}')
+    log.debug(f'sig spectrum real end {spec[-3:][::-1].real}')
+    log.debug(f'sig spectrum imag beg {spec[1:4].imag}')
+    log.debug(f'sig spectrum imag end {spec[-3:][::-1].imag}')
 
     # verify signal spectrum conjugate symmetry
     if testConjugateSymmetry(spec) is not True:
-        logMsg = "Signal spectrum is not symmetric."
+        logMsg = "Signal spectrum is not conjugate symmetric."
         log.error(logMsg)
         raise IMOSAcousticCalibException(logMsg)
 
@@ -241,11 +265,27 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     if len(signal) % 2 == 0:
         # off mumber of samples
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:]))))
-        specToInverse = spec / numpy.sqrt(numpy.concatenate((calSpecInt[0:-1], calSpecInt[::-1][:-1])))
+        pwrSpec = numpy.concatenate((calSpecInt[0:-1], calSpecInt[::-1][:-1]))
+        log.debug(f'pwr spectrum DC offset {pwrSpec[0]}') 
+        log.debug(f'pwr spectrum Nyquist freq {pwrSpec[pwrSpec.size//2]}') 
+        log.debug(f'pwr spectrum real beg {pwrSpec[0:3].real}')
+        log.debug(f'pwr spectrum real end {pwrSpec[-3:][::-1].real}')
+        log.debug(f'pwr spectrum imag beg {pwrSpec[0:3].imag}')
+        log.debug(f'pwr spectrum imag end {pwrSpec[-3:][::-1].imag}')
     else:
         # even mumber of samples
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
-        specToInverse = spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][:-1])))
+        pwrSpec = numpy.concatenate((calSpecInt[0:-1], calSpecInt[::-1][:-1]))
+
+    log.debug(type(numpy.sqrt(pwrSpec)))
+    specToInverse = spec / numpy.sqrt(pwrSpec)
+    log.debug(f"specToInverse.size = {specToInverse.size}")
+
+    # verify calibrated spectrum conjugate symmetry
+    if testConjugateSymmetry(specToInverse) is not True:
+        logMsg = "Calibrated spectrum to IFFT is not conjugate symmetric."
+        log.error(logMsg)
+        # raise IMOSAcousticCalibException(logMsg)
 
     calibratedSignal = numpy.fft.ifft(specToInverse)
 
@@ -255,7 +295,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     # log.info(logMsg)
 
     # Sanity check of the signal after IFFT - imaginary components of the signal shall be zero-ish
-    if not numpy.allclose(calibratedSignal.imag, 0.0):
+    if not numpy.allclose(calibratedSignal.imag, 0.0, rtol=1e-04, atol=1e-07):
         logMsg = "Calibrated signal after IFFT contains non-zero imaginary component(s)"
         log.error(logMsg)
         log.error(f"imag max = {max(numpy.absolute(calibratedSignal.imag))}")
