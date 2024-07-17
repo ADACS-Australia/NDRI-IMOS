@@ -136,6 +136,25 @@ def loadPrepCalibFile(fileName: str,
     return calSpecNoise, calFreq, sampleRate
 
 
+def testConjugateSymmetry(spectrum: numpy.ndarray) -> bool: 
+    retVal = True
+    N = len(spectrum)
+    if spectrum[0] != spectrum[0].real:  # DC component should be real
+        log.error("DC component of spectrum is not real.")
+        retVal = False
+    if N % 2 != 0:  # Spectrum shall consist of even number of elements
+        log.error("Spectrum does not consist of odd number of elements.")
+        retVal = False
+    if spectrum[N//2] != spectrum[N//2].real:  # Nyquist frequency shall be real
+        log.error("Nyquist frequency is not a real number.")
+        retVal = False
+    if numpy.allclose(spectrum[1:N//2], numpy.conj(spectrum[-1:N//2:-1])):  # Verify conjugate symmetry
+        log.error("Conjugate symmetry test failed.")
+        retVal = False
+    # all tests passed, retVal stays True
+    return retVal
+
+
 def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
               calSpec: numpy.ndarray, calFreq: numpy.ndarray, fSample: float) -> numpy.ndarray:
     """
@@ -189,29 +208,46 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         numpy.savetxt('calSpecInt.txt', calSpecInt)
 
     # debugging...
-    print(calSpecInt[82:86])
-    print(calSpecInt[-86:-82])
+    
+    print(f'cal spec beg {calSpecInt[0:3]}')
+    print(f'cal spec end {calSpecInt[-3:][::-1]}')
 
     spec = numpy.fft.fft(signal)
     if doWriteIntermediateResults:
         numpy.savetxt('spec.txt', spec, fmt='%.10f')
-        
+
     print(spec[:5])
     print(spec[-5:])
 
-    print(spec[1:5])
-    print(spec[-5:-2])
+    # print(f'sig spec beg {spec[0:3]}')
+    # print(f'sig spec end {spec[-3:][::-1]}')
 
-    # Inverse FFT - different subscripting for evan and odd number of signal samples
-    # if numpy.floor(len(signal) / 2) == len(signal) / 2:
+    print(f'sig spec real beg {spec[1:4].real}')
+    print(f'sig spec real end {spec[-3:][::-1].real}')
+
+    print(f'sig spec imag beg {spec[1:4].imag}')
+    print(f'sig spec imag end {spec[-3:][::-1].imag}')
+
+    # verify signal spectrum conjugate symmetry
+    if testConjugateSymmetry(spec) is not True:
+        logMsg = "Signal spectrum is not symmetric."
+        log.error(logMsg)
+        raise IMOSAcousticCalibException(logMsg)
+
+    # Inverse FFT
+    # Different subscripting for even and odd number of audio signal samples
+    # This is clumsy. We can do better... 
+    #     if numpy.floor(len(signal) / 2) == len(signal) / 2:
     if len(signal) % 2 == 0:
         # off mumber of samples
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:]))))
-        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][:-1]))))
+        specToInverse = spec / numpy.sqrt(numpy.concatenate((calSpecInt[0:-1], calSpecInt[::-1][:-1])))
     else:
         # even mumber of samples
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
-        calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][:-1]))))
+        specToInverse = spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][:-1])))
+
+    calibratedSignal = numpy.fft.ifft(specToInverse)
 
     # ## THIS DIAGNOSTIC CODE MAKES SENSE ONLY WHEN WE DON OT PICK ONLY REAL COMPONENT ABOVE
     # maxAbsImaginary = numpy.max(numpy.abs(calibratedSignal.imag))
