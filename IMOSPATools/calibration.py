@@ -79,6 +79,9 @@ def loadPrepCalibFile(fileName: str,
     calBinData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(fileName)
 
+    # debugging...
+    log.debug(f"Calibration data size is: {calBinData.size}")
+
     if doWriteIntermediateResults:
         numpy.savetxt('calBinData.txt', calBinData, fmt='%d')
         # diagplot.dp.add_plot(calBinData, "Calibration Signal binary")
@@ -237,7 +240,6 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         numpy.savetxt('calSpecInt.txt', calSpecInt)
 
     # debugging...
-    
     log.debug(f'cal spec beg {calSpecInt[0:3]}')
     log.debug(f'cal spec end {calSpecInt[-3:][::-1]}')
 
@@ -245,8 +247,8 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     if doWriteIntermediateResults:
         numpy.savetxt('spec.txt', spec, fmt='%.10f')
 
-    log.debug(f'sig spectrum DC offset {spec[0]}') 
-    log.debug(f'sig spectrum Nyquist freq {spec[spec.size//2]}') 
+    log.debug(f'sig spectrum DC offset {spec[0]}')
+    log.debug(f'sig spectrum Nyquist freq {spec[spec.size//2]}')
     log.debug(f'sig spectrum real beg {spec[1:4].real}')
     log.debug(f'sig spectrum real end {spec[-3:][::-1].real}')
     log.debug(f'sig spectrum imag beg {spec[1:4].imag}')
@@ -260,20 +262,20 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     # Inverse FFT
     # Different subscripting for even and odd number of audio signal samples
-    # This is clumsy. We can do better... 
+    # This works, but is clumsy. Simplified.
     #     if numpy.floor(len(signal) / 2) == len(signal) / 2:
     if len(signal) % 2 == 0:
-        # off mumber of samples
+        # odd number of samples
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:]))))
         pwrSpec = numpy.concatenate((calSpecInt[0:-1], calSpecInt[::-1][:-1]))
-        log.debug(f'pwr spectrum DC offset {pwrSpec[0]}') 
-        log.debug(f'pwr spectrum Nyquist freq {pwrSpec[pwrSpec.size//2]}') 
+        log.debug(f'pwr spectrum DC offset {pwrSpec[0]}')
+        log.debug(f'pwr spectrum Nyquist freq {pwrSpec[pwrSpec.size//2]}')
         log.debug(f'pwr spectrum real beg {pwrSpec[0:3].real}')
         log.debug(f'pwr spectrum real end {pwrSpec[-3:][::-1].real}')
         log.debug(f'pwr spectrum imag beg {pwrSpec[0:3].imag}')
         log.debug(f'pwr spectrum imag end {pwrSpec[-3:][::-1].imag}')
     else:
-        # even mumber of samples
+        # even number of samples
         # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
         pwrSpec = numpy.concatenate((calSpecInt[0:-1], calSpecInt[::-1][:-1]))
 
@@ -290,9 +292,9 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     calibratedSignal = numpy.fft.ifft(specToInverse)
 
     # ## THIS DIAGNOSTIC CODE MAKES SENSE ONLY WHEN WE DON OT PICK ONLY REAL COMPONENT ABOVE
-    # maxAbsImaginary = numpy.max(numpy.abs(calibratedSignal.imag))
-    # logMsg = (f"Maximum absolute value of imaginary component of calibrated signal after IFFT: {maxAbsImaginary}")
-    # log.info(logMsg)
+    maxAbsImaginary = numpy.max(numpy.abs(calibratedSignal.imag))
+    logMsg = (f"Maximum absolute value of imaginary component of calibrated signal after IFFT: {maxAbsImaginary}")
+    log.info(logMsg)
 
     # Sanity check of the signal after IFFT - imaginary components of the signal shall be zero-ish
     if not numpy.allclose(calibratedSignal.imag, 0.0, rtol=1e-04, atol=1e-07):
