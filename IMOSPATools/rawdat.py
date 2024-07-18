@@ -206,11 +206,11 @@ def readRawBinData(file: _io.BufferedReader,
 
     # read the extra sound record as numpy array of int16
     extraSamplesInBinDataTail = (footerPos - 1) // 2
-    binDataTail = numpy.frombuffer(file.read(extraSamplesInBinDataTail * numpy.dtype(numpy.int16).itemsize), dtype=numpy.int16)
+    binDataTail = numpy.frombuffer(file.read(extraSamplesInBinDataTail * numpy.dtype(numpy.uint16).itemsize), dtype=numpy.uint16)
     log.debug(f'Size of extra bin data tail numpy array is {binDataTail.size}')
 
     binData = numpy.append(binData, binDataTail)
-    log.info(f'Size of complete data is {binData.size} samples {binData.size * numpy.dtype(numpy.int16).itemsize} bytes')
+    log.info(f'Size of complete data is {binData.size} samples {binData.size * numpy.dtype(numpy.uint16).itemsize} bytes')
 
     return binData
 
