@@ -77,6 +77,10 @@ if __name__ == "__main__":
     log.debug(f"min bin value in raw .DAT signal size is: {numpy.min(binData)}")
     log.debug(f"max bin value in raw .DAT signal size is: {numpy.max(binData)}")
 
+    numOverloadedSamples = calibration.countOverload(binData)
+    if numOverloadedSamples > 0:
+        log.warning(f"Logger was overloaded - signal is clipped for {numOverloadedSamples} samples.")
+
     # calibration
     if args.calibrate is not None:
         # cnl, hs - commandline params for now, later loaded from file (csv?)
@@ -111,4 +115,5 @@ if __name__ == "__main__":
     else:
         if binData is not None:
             # write raw wav file
+            # !@#$%^& TODO: convert uint16 to int16
             wav.writeMono16bit(log, rawFileName, sampleRate, binData)
