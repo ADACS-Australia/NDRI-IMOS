@@ -242,7 +242,8 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         log.error(logMsg)
         raise IMOSAcousticCalibException(logMsg)
 
-    # make high-pass filter to remove slow varying DC offset
+    # Make high-pass filter to remove slow varying DC offset
+    # 5th order Butterworth filter with a critical frequency 10/sampling rate
     b, a = scipy.signal.butter(5, 5/fSample*2, btype='high', output='ba')
     # apply the filter on the input signal
     signal = scipy.signal.lfilter(b, a, volts)
