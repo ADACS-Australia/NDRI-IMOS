@@ -267,6 +267,8 @@ def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, d
     """
     binData = None
 
+    log.debug(f'Attempting to read raw DAT audio file {fileName}')
+    
     with open(fileName, 'rb') as file:
         try:
             numChannels, sampleRate, durationHeader = readRawHeaderEssentials(file)
@@ -290,5 +292,7 @@ def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, d
 
         # done reading input raw/.DAT file
         file.close()
+
+        log.debug(f'Done reading raw DAT audio file {fileName}')
 
         return binData, numChannels, sampleRate, durationHeader, startTime, endTime
