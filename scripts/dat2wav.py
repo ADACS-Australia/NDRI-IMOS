@@ -86,25 +86,25 @@ if __name__ == "__main__":
         volts = calibration.toVolts(binData)
         calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
 
-        scaledSignal = calibration.scaleToBinary(calibratedSignal, 16)
-        scaledCalibSignal = scaledSignal.astype(numpy.int16)
+        scaledCalibSignal = calibration.scaleToBinary(calibratedSignal, 16)
+        scaledCalibSignalInt16 = scaledCalibSignal.astype(numpy.int16)
 
         if args.intermediate:
             # WTF python you typeless language! 
-            # The print defaults to float even for an explicit int16!
-            numpy.savetxt('signal_final_16bit_int.txt', scaledCalibSignal, fmt='%d')
+            # The print defaults to float even for an explicit uint16!
+            numpy.savetxt('signal_final_16bit_int.txt', scaledCalibSignalInt16, fmt='%d')
             # diagplot.dp.add_plot(scaledCalibSignal, "Signal final 16bit")
             # diagplot.dp.show()
 
         # debugging...
-        log.debug(f"scaled calibrated signal size is: {scaledCalibSignal.size}")
-        log.debug(f"scaled calibrated signal type is: {type(scaledCalibSignal)}")
-        log.debug(f"scaled calibrated signal sample type is: {scaledCalibSignal.dtype}")
-        log.debug(f"scaled calibrated signal sample size is: {scaledCalibSignal.itemsize} bytes")
+        log.debug(f"scaled calibrated signal size is: {scaledCalibSignalInt16.size}")
+        log.debug(f"scaled calibrated signal type is: {type(scaledCalibSignalInt16)}")
+        log.debug(f"scaled calibrated signal sample type is: {scaledCalibSignalInt16.dtype}")
+        log.debug(f"scaled calibrated signal sample size is: {scaledCalibSignalInt16.itemsize} bytes")
 
-        if scaledCalibSignal is not None:
+        if scaledCalibSignalInt16 is not None:
             # write calibrated wav file
-            wav.writeMono16bit(log, rawFileName, sampleRate, scaledCalibSignal)
+            wav.writeMono16bit(log, rawFileName, sampleRate, scaledCalibSignalInt16)
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)
