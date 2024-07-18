@@ -165,7 +165,20 @@ def extractNotClose(array1, array2, rtol=1e-05, atol=1e-08):
     return not_close_values
 
 
-def testConjugateSymmetry(spectrum: numpy.ndarray) -> bool: 
+def testConjugateSymmetry(spectrum: numpy.ndarray) -> bool:
+    """
+    This function check whether the spectrum has the proper symmetry
+    for a real-valued signal. Apply this to your spectrum before
+    performing the IFFT
+    For a successful IFFT operation, the spectrum should typically
+    be conjugate symmetric for real-valued signals.
+
+    Parameters:
+    spectrum (numpy.ndarray): spectrum to make symmetric
+
+    Returns:
+    bool: True if symmetric, false if not, all within the default tolerance
+    """
     retVal = True
     N = len(spectrum)
     if spectrum[0] != spectrum[0].real:  # DC component should be real
@@ -185,6 +198,29 @@ def testConjugateSymmetry(spectrum: numpy.ndarray) -> bool:
         retVal = False
     # all tests passed, retVal stays True
     return retVal
+
+
+def enforceConjugateSymmetry(spectrum: numpy.ndarray) -> numpy.ndarray:
+    """
+    For a successful IFFT operation, the spectrum should typically
+    be conjugate symmetric for real-valued signals - otherwise
+    the result of IFFT might be other than expected, causing an issue.
+    This function ensures that the spectrum has the proper symmetry
+    for a real-valued signal. Apply this to your spectrum before
+    performing the IFFT, and it should help resolve the issue.
+
+    Parameters:
+    spectrum (numpy.ndarray): spectrum to make symmetric
+
+    Returns:
+    numpy.ndarray: conjugate symmetric spectrum
+    """
+    N = len(spectrum)
+    spectrum[0] = spectrum[0].real  # DC component must be real
+    if N % 2 == 0:
+        spectrum[N//2] = spectrum[N//2].real  # Nyquist frequency must be real
+    spectrum[1:N//2] = numpy.conj(spectrum[-1:N//2:-1])  # Enforce conjugate symmetry
+    return spectrum
 
 
 def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
@@ -288,6 +324,8 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         logMsg = "Calibrated spectrum to IFFT is not conjugate symmetric."
         log.error(logMsg)
         # raise IMOSAcousticCalibException(logMsg)
+
+    specToInverse = enforceConjugateSymmetry(specToInverse)
 
     calibratedSignal = numpy.fft.ifft(specToInverse)
 
