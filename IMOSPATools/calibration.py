@@ -47,8 +47,6 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_binData.txt', binData, fmt='%d')
-        # diagplot.dp.add_plot(binData, "Original Signal bin data", 500)
-        # diagplot.dp.show()
 
     # Multiply by this factor to convert A/D counts to volts 0.0..5.0V
     countsToVolts = FULLSCALE_VOLTS / (1 << rawdat.BITS_PER_SAMPLE)
@@ -57,7 +55,6 @@ def toVolts(binData: numpy.ndarray) -> numpy.ndarray:
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_voltsData.txt', voltsData, fmt='%.5f')
-        # diagplot.dp.add_plot(voltsData, "Original Signal Volts")
 
     return voltsData
 
@@ -111,8 +108,6 @@ def loadPrepCalibFile(fileName: str,
     # not included in the welch() library function as in Matlab's pwelch()
     # suing round to convert sampling rate to int as it is float.
     hammingWindow = scipy.signal.windows.hamming(round(sampleRate))
-
-    # debugging...
     log.debug(f"hammingWindow size is: {hammingWindow.size}")
 
     # obviously, the parameters are mixed up, and even returned params
@@ -123,7 +118,6 @@ def loadPrepCalibFile(fileName: str,
         numpy.savetxt('calFreq.txt', calFreq, fmt='%.2f')
         numpy.savetxt('calSpec.txt', calSpec, fmt='%.10f')
 
-    # debugging...
     log.debug(f"calSpec size is: {calSpec.size}")
     log.debug(f"calFreq size is: {calFreq.size}")
 
@@ -158,7 +152,6 @@ def extractNotClose(array1, array2, rtol=1e-05, atol=1e-08):
 
     # Create a boolean mask for values that are not close
     not_close_mask = ~numpy.isclose(array1, array2, rtol=rtol, atol=atol)
-
     # Use the mask to extract values from array1
     not_close_values = array1[not_close_mask]
 
@@ -172,6 +165,10 @@ def testConjugateSymmetry(spectrum: numpy.ndarray) -> bool:
     performing the IFFT
     For a successful IFFT operation, the spectrum should typically
     be conjugate symmetric for real-valued signals.
+
+    All the checks in the test are done; it will not stop checking
+    once the 1st failure is detected, to print all the problems
+    that were detected.
 
     Parameters:
     spectrum (numpy.ndarray): spectrum to make symmetric
@@ -189,14 +186,15 @@ def testConjugateSymmetry(spectrum: numpy.ndarray) -> bool:
         retVal = False
     else:
         nyquistFreq = spectrum[N//2]
-        if not numpy.isclose(nyquistFreq.imag, 0.0, rtol=1e-05, atol=1e-05):  # Nyquist frequency shall be real
+        # Nyquist frequency shall be real
+        if not numpy.isclose(nyquistFreq.imag, 0.0, rtol=1e-05, atol=1e-07 ):
             log.error(f"Nyquist frequency {nyquistFreq} is not a real number.")
             retVal = False
     if not numpy.allclose(spectrum[1:N//2], numpy.conj(spectrum[-1:N//2:-1]),
                       rtol=1e-05, atol=1e-08):  # Verify conjugate symmetry
         log.error("Conjugate symmetry test failed.")
         retVal = False
-    # all tests passed, retVal stays True
+
     return retVal
 
 
@@ -216,15 +214,20 @@ def enforceConjugateSymmetry(spectrum: numpy.ndarray) -> numpy.ndarray:
     numpy.ndarray: conjugate symmetric spectrum
     """
     N = len(spectrum)
-    spectrum[0] = spectrum[0].real  # DC component must be real
+    # DC component must be real
+    spectrum[0] = spectrum[0].real
     if N % 2 == 0:
-        spectrum[N//2] = spectrum[N//2].real  # Nyquist frequency must be real
-    spectrum[1:N//2] = numpy.conj(spectrum[-1:N//2:-1])  # Enforce conjugate symmetry
+        # Nyquist frequency must be real
+        spectrum[N//2] = spectrum[N//2].real
+    # Enforce conjugate symmetry
+    spectrum[1:N//2] = numpy.conj(spectrum[-1:N//2:-1])  
+
     return spectrum
 
 
 def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
-              calSpec: numpy.ndarray, calFreq: numpy.ndarray, fSample: float) -> numpy.ndarray:
+              calSpec: numpy.ndarray, calFreq: numpy.ndarray,
+              fSample: float) -> numpy.ndarray:
     """
     calibrate sound record
 
@@ -303,30 +306,27 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     #     if numpy.floor(len(signal) / 2) == len(signal) / 2:
     if len(signal) % 2 == 0:
         # odd number of samples
-        # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt[1:], calSpecInt[::-1][1:]))))
         pwrSpec = numpy.concatenate((calSpecInt[0:-1], calSpecInt[::-1][:-1]))
-        log.debug(f'pwr spectrum DC offset {pwrSpec[0]}')
-        log.debug(f'pwr spectrum Nyquist freq {pwrSpec[pwrSpec.size//2]}')
-        log.debug(f'pwr spectrum real beg {pwrSpec[0:3].real}')
-        log.debug(f'pwr spectrum real end {pwrSpec[-3:][::-1].real}')
-        log.debug(f'pwr spectrum imag beg {pwrSpec[0:3].imag}')
-        log.debug(f'pwr spectrum imag end {pwrSpec[-3:][::-1].imag}')
     else:
         # even number of samples
-        # calibratedSignal = numpy.fft.ifft(spec / numpy.sqrt(numpy.concatenate((calSpecInt, calSpecInt[::-1][1:]))))
-        pwrSpec = numpy.concatenate((calSpecInt[0:-1], calSpecInt[::-1][:-1]))
+        pwrSpec = numpy.concatenate((calSpecInt[:], calSpecInt[::-1][:-1]))
 
-    log.debug(type(numpy.sqrt(pwrSpec)))
+    # log.debug(f'pwr spectrum DC offset {pwrSpec[0]}')
+    # log.debug(f'pwr spectrum Nyquist freq {pwrSpec[pwrSpec.size//2]}')
+    log.debug(f'pwr spectrum real beg {pwrSpec[0:3].real}')
+    log.debug(f'pwr spectrum real end {pwrSpec[-3:][::-1].real}')
+    log.debug(f'pwr spectrum imag beg {pwrSpec[0:3].imag}')
+    log.debug(f'pwr spectrum imag end {pwrSpec[-3:][::-1].imag}')
+
     specToInverse = spec / numpy.sqrt(pwrSpec)
     log.debug(f"specToInverse.size = {specToInverse.size}")
 
     # verify calibrated spectrum conjugate symmetry
     if testConjugateSymmetry(specToInverse) is not True:
-        logMsg = "Calibrated spectrum to IFFT is not conjugate symmetric."
-        log.error(logMsg)
-        # raise IMOSAcousticCalibException(logMsg)
-
-    specToInverse = enforceConjugateSymmetry(specToInverse)
+        specToInverse = enforceConjugateSymmetry(specToInverse)
+        logMsg = "Calibrated spectrum to IFFT is not conjugate symmetric, symmetry enforced."
+        log.warning(logMsg)
+        # raise IMOSAcousticCalibException(logMsg)    
 
     calibratedSignal = numpy.fft.ifft(specToInverse)
 
@@ -336,7 +336,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     log.info(logMsg)
 
     # Sanity check of the signal after IFFT - imaginary components of the signal shall be zero-ish
-    if not numpy.allclose(calibratedSignal.imag, 0.0, rtol=1e-04, atol=1e-07):
+    if not numpy.allclose(calibratedSignal.imag, 0.0, rtol=1e-05, atol=1e-08):
         logMsg = "Calibrated signal after IFFT contains non-zero imaginary component(s)"
         log.error(logMsg)
         log.error(f"imag max = {max(numpy.absolute(calibratedSignal.imag))}")
@@ -348,8 +348,8 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     calibratedSignal = calibratedSignal.real
 
     # debugging...
-    print(calibratedSignal[:5])
-    print(calibratedSignal[-5:])
+    # print(calibratedSignal[:5])
+    # print(calibratedSignal[-5:])
 
     log.debug(f"calibrated signal size is: {calibratedSignal.size}")
     log.debug(f"calibrated signal sample type is: {calibratedSignal.dtype}")
@@ -357,7 +357,6 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_calibrated.txt', calibratedSignal)
-        # diagplot.dp.add_plot(calibratedSignal, "Calibrated Signal after IFFT")
 
     return calibratedSignal
 
@@ -376,7 +375,6 @@ def scaleToBinary(signal: numpy.ndarray, bitsPerSample: int) -> numpy.ndarray:
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_normalised.txt', normalisedSignal)
-        # diagplot.dp.add_plot(calibratedSignal, "Calibrated Signal after IFFT")
 
     # debugging...
     normalisedMin = numpy.min(normalisedSignal)
@@ -391,6 +389,5 @@ def scaleToBinary(signal: numpy.ndarray, bitsPerSample: int) -> numpy.ndarray:
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_scaled.txt', roundedSignal)
-        # diagplot.dp.add_plot(roundedSignal, "Calibrated Scaled Normalised Signal")
 
     return(roundedSignal)
