@@ -42,7 +42,6 @@ if __name__ == "__main__":
     # default logging level
     logLevel = logging.INFO
 
-
     if args.debug:
         logLevel = logging.DEBUG
 
