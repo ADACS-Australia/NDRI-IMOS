@@ -15,8 +15,8 @@
                 "-f",
                 "502DB01D.DAT",
                 "-c",
-                "501E9BF5.DAT",
-                "-i"
+                "501E9BF5.DAT"
+                // "-i"
             ],
             "console": "integratedTerminal",
             "cwd": "${fileDirname}"
