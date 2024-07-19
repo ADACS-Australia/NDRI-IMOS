@@ -36,6 +36,8 @@ REGEXP_SUBSECONDS: Final[str] = r'(\d{5})$'
 REGEXP_SAMPLE_RATE: Final[str] = r"Sample Rate (\d+) Duration (\d+)"
 REGEXP_FILTER: Final[str] = r"Filter [0,1] C[0-3]=(\d+) C[0-3]=(\d+)"
 
+# Raw DAT files are uint16 big-endian
+IMOS_DAT_FILE_DTYPE: Final[str] = '>u2'
 
 @dataclass
 class RAWFileFilterLine:
@@ -181,7 +183,7 @@ def readRawBinData(file: _io.BufferedReader,
     log.debug(f'numSamplesHeader is {numSamplesHeader}')
 
     # read the nominal chunk of sound record as numpy array of int16
-    binData = numpy.frombuffer(file.read(numSamplesHeader * numpy.dtype(numpy.uint16).itemsize), dtype=numpy.uint16)
+    binData = numpy.frombuffer(file.read(numSamplesHeader * numpy.dtype(IMOS_DAT_FILE_DTYPE).itemsize), dtype=IMOS_DAT_FILE_DTYPE)
     log.debug(f'Size of read bin data as per header numpy array is {binData.size}')
 
     # store the position where the binary data tail begins
@@ -206,11 +208,11 @@ def readRawBinData(file: _io.BufferedReader,
 
     # read the extra sound record as numpy array of int16
     extraSamplesInBinDataTail = (footerPos - 1) // 2
-    binDataTail = numpy.frombuffer(file.read(extraSamplesInBinDataTail * numpy.dtype(numpy.uint16).itemsize), dtype=numpy.uint16)
+    binDataTail = numpy.frombuffer(file.read(extraSamplesInBinDataTail * numpy.dtype(IMOS_DAT_FILE_DTYPE).itemsize), dtype=IMOS_DAT_FILE_DTYPE)
     log.debug(f'Size of extra bin data tail numpy array is {binDataTail.size}')
 
     binData = numpy.append(binData, binDataTail)
-    log.info(f'Size of complete data is {binData.size} samples {binData.size * numpy.dtype(numpy.uint16).itemsize} bytes')
+    log.info(f'Size of complete data is {binData.size} samples {binData.size * numpy.dtype(IMOS_DAT_FILE_DTYPE).itemsize} bytes')
 
     return binData
 
