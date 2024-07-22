@@ -29,10 +29,11 @@ with open('README.rst') as readme_file:
 
 # add all libraries
 requirements = ["numpy",
-                "scipy",
                 "wave",
                 "mutagen",
-                "matplotlib"]
+                "soundfile",
+                "matplotlib",
+                "scipy"]
 
 package_name = 'IMOSPATools'
 

@@ -9,6 +9,7 @@ import numpy
 from IMOSPATools import rawdat
 from IMOSPATools import wav
 from IMOSPATools import calibration
+from IMOSPATools import audiofile
 
 log = logging.getLogger('IMOSPATools')
 calibration.doWriteIntermediateResults = False
@@ -66,6 +67,15 @@ if __name__ == "__main__":
 
     binData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(rawFileName)
+
+    essentialMetadataFromRaw = wav.WavMetadataEssential(
+        numChannels=numChannels,
+        sampleRate=sampleRate,
+        durationHeader=durationHeader,
+        startTime=startTime,
+        endTime=endTime
+    )
+
     # debugging...
     log.debug(f"raw .DAT signal size is: {binData.size}")
     log.debug(f"raw .DAT signal type is: {type(binData)}")
@@ -103,8 +113,13 @@ if __name__ == "__main__":
 
         if scaledCalibSignalInt16 is not None:
             # write calibrated wav file
-            wavFileName = wav.deriveWavFileName(rawFileName)
-            wav.writeMono16bit(wavFileName, sampleRate, scaledCalibSignalInt16)
+            wavFileName = wav.deriveWavFileName('_' + rawFileName)
+            wav.writeMono16bit(wavFileName, sampleRate,
+                               scaledCalibSignalInt16)
+            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
+            audiofile.writeWavMono16bit(wavFileName, sampleRate,
+                                        scaledCalibSignalInt16,
+                                        essentialMetadataFromRaw)
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)
