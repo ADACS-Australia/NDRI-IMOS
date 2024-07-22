@@ -31,6 +31,7 @@ with open('README.rst') as readme_file:
 requirements = ["numpy",
                 "scipy",
                 "wave",
+                "mutagen",
                 "matplotlib"]
 
 package_name = 'IMOSPATools'

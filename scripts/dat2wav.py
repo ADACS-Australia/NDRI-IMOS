@@ -13,10 +13,6 @@ from IMOSPATools import calibration
 log = logging.getLogger('IMOSPATools')
 calibration.doWriteIntermediateResults = False
 
-# err codes
-# ERR_FooterNotFound = -2
-
-# ------ the code below goes to the tool script ----------------
 
 def parseArgs():
     parser = argparse.ArgumentParser()
@@ -107,7 +103,8 @@ if __name__ == "__main__":
 
         if scaledCalibSignalInt16 is not None:
             # write calibrated wav file
-            wav.writeMono16bit(log, rawFileName, sampleRate, scaledCalibSignalInt16)
+            wavFileName = wav.deriveWavFileName(rawFileName)
+            wav.writeMono16bit(wavFileName, sampleRate, scaledCalibSignalInt16)
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)
@@ -115,4 +112,8 @@ if __name__ == "__main__":
         if binData is not None:
             # write raw wav file
             # !@#$%^& TODO: convert uint16 to int16
-            wav.writeMono16bit(log, rawFileName, sampleRate, binData)
+            wavFileName = wav.deriveWavFileName(rawFileName)
+            wav.writeMono16bit(wavFileName, sampleRate, binData)
+        else:
+            logMsg = "Something went wrong, there is no audio signal data to write to wav file."
+            log.error(logMsg)
