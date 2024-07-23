@@ -8,14 +8,14 @@ from dataclasses import dataclass, asdict
 log = logging.getLogger('IMOSPATools')
 
 
-class IMOSAcousticAudioWriteException(Exception):
+class IMOSAcousticAudioFileException(Exception):
     pass
 
 
 @dataclass
 class MetadataEssential:
     numChannels: int = 1
-    sampleRate: int = -1 
+    sampleRate: int = -1
     durationHeader: int = 0
     startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
@@ -38,7 +38,20 @@ def deriveOutputFileName(rawFileName: str, ext: str) -> str:
 
 
 def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
-                      metadataStruct: MetadataEssential=None):
+                      metadataStruct: MetadataEssential=None) -> None:
+    """
+    Write audio signal data into a MS wave file
+    !@#$%^& TODO use the struct values rather than extra param sampleRate
+
+    :param fileName: filename of the output audio file
+    :param sampleRate: sampling rate
+    :param binData: audio data as numpy.ndarray of numpy.int16
+    :param metadataStruct: a dataclass structure with metadata. 
+                           some go into the mandatory file header,
+                           all then as metadata stored in comment tag
+                           as json string. 
+    :return: None
+    """
     # Write WAV file with optional metadata as comment
     # Ensure binData is int16
     if binData.dtype != numpy.int16:
@@ -73,12 +86,13 @@ def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
     except (IOError, OSError, soundfile.LibsndfileError) as e:
         logMsg = f"Error writing audio file {fileName}"
         log.error(logMsg + f"\nException {e}")
-        raise IMOSAcousticAudioWriteException(logMsg)
+        raise IMOSAcousticAudioFileException(logMsg)
 
     log.info(f"Written {fileName} with meta data.")
 
 
-# # Verify the metadata
-# data, samplerate = sf.read(output_filename)
-# metadata = sf.info(output_filename).metadata
-# print("Metadata comment:", metadata.get('comment'))
+def getMetadata(fileName: str) -> str:
+    with soundfile.SoundFile(fileName, mode='r') as sf:
+        # data, samplerate = sf.read(output_filename)
+        metadata = sf.info(output_filename).metadata
+        return metadata.get('comment')
