@@ -5,7 +5,7 @@ name: Python build IMOSPATools package and test with pytest
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "test_tests" ]
   pull_request:
     branches: [ "master" ]
   # to be able to run workflow manually, workflow_dispatch event must be defined
@@ -53,4 +53,4 @@ jobs:
         python -m pip --verbose install .
     - name: Test with pytest
       run: |
-        pytest -v test/
+        pytest -v tests/

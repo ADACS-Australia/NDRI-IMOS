@@ -32,6 +32,7 @@ requirements = ["numpy",
                 "wave",
                 "mutagen",
                 "soundfile",
+                # "matplotlib",
                 "scipy"]
 
 package_name = 'IMOSPATools'
@@ -61,7 +62,7 @@ setup(
     keywords='IMOS ANMN AODN audio hydrophone',
     packages=find_packages(include=[package_name]),
     # package_data={package_name: ['data/*']},
-    test_suite='test',
+    test_suite='tests',
     url='https://github.com/ADACS-Australia/NDRI-IMOS',
     zip_safe=False,
 )
