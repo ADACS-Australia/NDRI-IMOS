@@ -5,9 +5,9 @@ name: Python build IMOSPATools and test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
   # to be able to run workflow manually, workflow_dispatch event must be defined
   workflow_dispatch:
     inputs:
