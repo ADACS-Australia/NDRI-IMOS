@@ -49,9 +49,9 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.9'
+        # 'Programming Language :: Python :: 3.10',
+        # 'Programming Language :: Python :: 3.11'
     ],
     description="IMOS Passive Audio Data Processing Tools",
     install_requires=requirements,
