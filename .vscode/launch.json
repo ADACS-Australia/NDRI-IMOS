@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python debug dat2wav.py",
+            "name": "dat2wav.py calibration",
             "type": "python",
             "request": "launch",
             "preLaunchTask": "Build and locally pip install IMOSPATools python package",
@@ -16,6 +16,22 @@
                 "502DB01D.DAT",
                 "-c",
                 "501E9BF5.DAT"
+                // "-i"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${fileDirname}"
+            //"purpose":["debug-in-terminal"]
+        },
+        {
+            "name": "dat2wav.py simple",
+            "type": "python",
+            "request": "launch",
+            "preLaunchTask": "Build and locally pip install IMOSPATools python package",
+            "program": "dat2wav.py",
+            "args": [
+                "--debug",
+                "-f",
+                "502DB01D.DAT",
                 // "-i"
             ],
             "console": "integratedTerminal",

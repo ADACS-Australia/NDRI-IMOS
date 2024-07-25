@@ -95,7 +95,8 @@ if __name__ == "__main__":
         volts = calibration.toVolts(binData)
         calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
 
-        scaledCalibSignal = calibration.scaleToBinary(calibratedSignal, 16)
+        scaledCalibSignal = calibration.scaleToBinary(calibratedSignal,
+                                                      rawdat.BITS_PER_SAMPLE)
         scaledCalibSignalInt16 = scaledCalibSignal.astype(numpy.int16)
 
         if args.intermediate:
@@ -125,10 +126,16 @@ if __name__ == "__main__":
             log.error(logMsg)
     else:
         if binData is not None:
-            # write raw wav file
-            # !@#$%^& TODO: convert uint16 to int16
+            # Cannot just save binary data blob to wave,
+            # need to convert uint16 to int16
+            # Steps: convert to volts, normalise and scale back to signed int16
+            volts = calibration.toVolts(binData)
+            normaliasedSignal = calibration.scaleToBinary(volts,
+                                                          rawdat.BITS_PER_SAMPLE)
+            scaledSignalInt16 = normaliasedSignal.astype(numpy.int16)
+            # write normalised scaled but still raw uncalibrated data into a wav file
             wavFileName = wav.deriveWavFileName(rawFileName)
-            wav.writeMono16bit(wavFileName, sampleRate, binData)
+            wav.writeMono16bit(wavFileName, sampleRate, scaledSignalInt16)
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)
