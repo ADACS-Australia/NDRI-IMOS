@@ -365,7 +365,7 @@ def scaleToBinary(signal: numpy.ndarray, bitsPerSample: int) -> numpy.ndarray:
     """
     scaling of output for writing into wav file
 
-    :param signal: audio data/signal
+    :param signal: audio data/signal in volts
     :param bitsPerSample: bits per sample
     :return: scaled audio signal
     """
