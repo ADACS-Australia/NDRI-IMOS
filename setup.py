@@ -62,7 +62,7 @@ setup(
     keywords='IMOS ANMN AODN audio hydrophone',
     packages=find_packages(include=[package_name]),
     # package_data={package_name: ['data/*']},
-    test_suite='tests',
+    test_suite='test',
     url='https://github.com/ADACS-Australia/NDRI-IMOS',
     zip_safe=False,
 )
