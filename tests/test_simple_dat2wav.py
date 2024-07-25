@@ -11,18 +11,8 @@ log = logging.getLogger('IMOSPATools')
 calibration.doWriteIntermediateResults = False
 
 
-if __name__ == "__main__":
-    args = parseArgs()
-
-    # set debugging logging level so we see as much as pos in testing
-    logLevel = logging.DEBUG
-
-    logFormat = "[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s] %(levelname)s: %(message)s"
-    logging.basicConfig(level=logLevel, format=logFormat,
-                        #  seconds resolution is good enough for logging timestamp
-                        datefmt='%Y-%m-%d %H:%M:%S')
-
-    rawFileName = 'data/Rottnest_3154/502DB01D.DAT'
+def test_simple_dat2wav():
+    rawFileName = 'tests/data/Rottnest_3154/502DB01D.DAT'
     if not os.path.exists(rawFileName):
         log.error(f'Raw dat file {rawFileName} not found!')
         raise AssertionError(f"FAILED: the following test data file does not exist: {rawFileName}")
@@ -57,4 +47,17 @@ if __name__ == "__main__":
     else:
         logMsg = "Something went wrong, there is no audio signal data to write to wav file."
         log.error(logMsg)
-        raise AssertionError(ogMsg)
+        raise AssertionError(logMsg)
+
+
+if __name__ == "__main__":
+
+    # set debugging logging level so we see as much as pos in testing
+    logLevel = logging.DEBUG
+
+    logFormat = "[%(asctime)s %(filename)s->%(funcName)s():%(lineno)s] %(levelname)s: %(message)s"
+    logging.basicConfig(level=logLevel, format=logFormat,
+                        #  seconds resolution is good enough for logging timestamp
+                        datefmt='%Y-%m-%d %H:%M:%S')
+
+    test_simple_dat2wav()

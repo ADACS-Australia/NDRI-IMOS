@@ -32,6 +32,7 @@ requirements = ["numpy",
                 "wave",
                 "mutagen",
                 "soundfile",
+                # "matplotlib",
                 "scipy"]
 
 package_name = 'IMOSPATools'
@@ -48,9 +49,9 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.9'
+        # 'Programming Language :: Python :: 3.10',
+        # 'Programming Language :: Python :: 3.11'
     ],
     description="IMOS Passive Audio Data Processing Tools",
     install_requires=requirements,
@@ -61,7 +62,7 @@ setup(
     keywords='IMOS ANMN AODN audio hydrophone',
     packages=find_packages(include=[package_name]),
     # package_data={package_name: ['data/*']},
-    test_suite='test',
+    test_suite='tests',
     url='https://github.com/ADACS-Australia/NDRI-IMOS',
     zip_safe=False,
 )
