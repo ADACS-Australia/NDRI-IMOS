@@ -32,7 +32,6 @@ requirements = ["numpy",
                 "wave",
                 "mutagen",
                 "soundfile",
-                "matplotlib",
                 "scipy"]
 
 package_name = 'IMOSPATools'
