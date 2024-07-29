@@ -137,11 +137,18 @@ def test_calib_dat2wav():
     dat1 = 'tests/data/Rottnest_3154/502DB01D.DAT'
     cal1 = 'tests/data/Rottnest_3154/Calib_file/501E9BF5.DAT'
     par1 = 'tests/data/Rottnest_3154/Calib_file/Calib_data.TXT'
+
     dat2 = 'tests/data/KI_3501/583E9500.DAT'
+    cal2 = 'tests/data/KI_3501/Calib_file/5809C515.DAT'
+    par2 = 'tests/data/KI_3501/Calib_file/Calib_data.TXT'
+
     dat3 = 'tests/data/Portland_3092/4F480851.DAT'
+    cal3 = 'tests/data/Portland_3092/Calib_file/4FEACA92.DAT'
+    par3 = 'tests/data/Portland_3092/Calib_file/Calib_data.TXT'
+
     calib_dat2wav(dat1, cal1, par1)
-    # calib_dat2wav(dat2)
-    # calib_dat2wav(dat3)
+    calib_dat2wav(dat2, cal2, par2)
+    calib_dat2wav(dat3, cal3, par3)
 
 
 if __name__ == "__main__":
