@@ -63,6 +63,8 @@ if __name__ == "__main__":
             args.sensitivity = -197.8
 
         if args.intermediate:
+            # calibration.doWriteIntermediateResults is initialised
+            # to False in the calibration module
             calibration.doWriteIntermediateResults = True
 
     binData, numChannels, sampleRate, durationHeader, \
