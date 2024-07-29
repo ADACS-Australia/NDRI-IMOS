@@ -1,6 +1,7 @@
 import os
 import logging
 import numpy
+import wave
 
 from IMOSPATools import rawdat
 from IMOSPATools import wav
@@ -95,15 +96,18 @@ def calib_dat2wav(rawFileName: str,
 
     # read and pre-process calibration audio record
     try:
-        calSpec, calFreq, fSample = calibration.loadPrepCalibFile(calibFileName, cnl, hs)
+        calSpec, calFreq, calSampleRate = calibration.loadPrepCalibFile(calibFileName, cnl, hs)
+        if sampleRate != calSampleRate:
+            msg = "Sample rate is different between the audio record and calibration file."
+            logging.error(msg)
+            raise AssertionError(msg)
     except:
         raise AssertionError(f"FAILED: read and pre-process calibration audio file {calibFileName}")
 
     # do the calibration
     try:
         volts = calibration.toVolts(binData)
-        calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
-
+        calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, sampleRate)
         scaledCalibSignal = calibration.scaleToBinary(calibratedSignal,
                                                       rawdat.BITS_PER_SAMPLE)
         scaledCalibSignalInt16 = scaledCalibSignal.astype(numpy.int16)
@@ -133,6 +137,56 @@ def calib_dat2wav(rawFileName: str,
     return True
 
 
+def compare_wav_files(wav1: str, ref1: str):
+    # Open the first WAV file
+    with wave.open(wav1, 'rb') as wav_file1:
+        params1 = wav_file1.getparams()
+        frames1 = wav_file1.readframes(params1.nframes)
+        samples1 = numpy.frombuffer(frames1, dtype=numpy.int16)
+
+    # Open the second WAV file (reference)
+    with wave.open(ref1, 'rb') as wav_file2:
+        params2 = wav_file2.getparams()
+        frames2 = wav_file2.readframes(params2.nframes)
+        samples2 = numpy.frombuffer(frames2, dtype=numpy.int16)
+
+    # Ensure the comparison is only up to the length of the shorter file
+    min_length = min(len(samples1), len(samples2))
+    samples1 = samples1[:min_length]
+    samples2 = samples2[:min_length]
+
+    # Compare the samples using numpy.isclose
+    # comparison = numpy.isclose(samples1, samples2)
+    # Return True if all samples are close, False otherwise
+    # return numpy.all(comparison)
+
+    are_close = numpy.allclose(samples1, samples2)
+
+    if not are_close:
+        # Find indices where samples are not close
+        not_close = ~numpy.isclose(samples1, samples2)
+        diff_indices = numpy.where(not_close)[0]
+
+        # Print the first 10 samples that are not close
+        print("First 10 samples that are not close (index, wav1 value, ref1 value):")
+        for i, idx in enumerate(diff_indices[:10]):
+            print(f"{idx}: {samples1[idx]} vs {samples2[idx]} ratio {samples2[idx]/samples1[idx]}")
+
+        print("Middle 10 samples that are not close (index, wav1 value, ref1 value):")
+        for i, idx in enumerate(diff_indices[((diff_indices.size//2)-5):((diff_indices.size//2)+5)]):
+            print(f"{idx}: {samples1[idx]} vs {samples2[idx]} ratio {samples2[idx]/samples1[idx]}")
+
+        print("Last 10 samples that are not close (index, wav1 value, ref1 value):")
+        for i, idx in enumerate(diff_indices[-10:]):
+            print(f"{idx}: {samples1[idx]} vs {samples2[idx]} ratio {samples2[idx]/samples1[idx]}")
+
+        logMsg = "Product of calibration (file {str}) is different from reference file."
+        log.error(logMsg)
+        raise AssertionError(logMsg)
+
+    return are_close
+
+
 def test_calib_dat2wav():
     dat1 = 'tests/data/Rottnest_3154/502DB01D.DAT'
     cal1 = 'tests/data/Rottnest_3154/Calib_file/501E9BF5.DAT'
@@ -149,6 +203,12 @@ def test_calib_dat2wav():
     calib_dat2wav(dat1, cal1, par1)
     calib_dat2wav(dat2, cal2, par2)
     calib_dat2wav(dat3, cal3, par3)
+
+
+def nest_calib_dat2wav_reference():
+    wav1 = 'tests/data/Rottnest_3154/502DB01D.wav'
+    ref1 = 'tests/data/Rottnest_3154/reference/502DB01D.wav'
+    compare_wav_files(wav1, ref1)
 
 
 if __name__ == "__main__":
