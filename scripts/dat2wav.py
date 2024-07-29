@@ -63,7 +63,7 @@ if __name__ == "__main__":
             args.sensitivity = -197.8
 
         if args.intermediate:
-            # calibration.doWriteIntermediateResults is initialised
+            # calibration.doWriteIntermediateResults is initialised \
             # to False in the calibration module
             calibration.doWriteIntermediateResults = True
 
@@ -93,35 +93,32 @@ if __name__ == "__main__":
         # cnl, hs - commandline params for now, later loaded from file (csv?)
         cnl = args.noise
         hs = args.sensitivity
-        calSpec, calFreq, fSample = calibration.loadPrepCalibFile(calibFileName, cnl, hs)
+        calSpec, calFreq, calSampleRate = calibration.loadPrepCalibFile(calibFileName, cnl, hs)
+        if sampleRate != calSampleRate:
+            logging.error("Sample rate is different between the audio record and calibration file.")
+
         volts = calibration.toVolts(binData)
-        calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, fSample)
-
-        scaledCalibSignal = calibration.scaleToBinary(calibratedSignal,
-                                                      rawdat.BITS_PER_SAMPLE)
-        scaledCalibSignalInt16 = scaledCalibSignal.astype(numpy.int16)
-
-        if args.intermediate:
-            # WTF python you typeless language! 
-            # The print defaults to float even for an explicit uint16!
-            numpy.savetxt('signal_final_16bit_int.txt', scaledCalibSignalInt16, fmt='%d')
-            # diagplot.dp.add_plot(scaledCalibSignal, "Signal final 16bit")
-            # diagplot.dp.show()
+        calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, sampleRate)
+        scaledSignal, scaleFactor = calibration.scale(calibratedSignal)
 
         # debugging...
-        log.debug(f"scaled calibrated signal size is: {scaledCalibSignalInt16.size}")
-        log.debug(f"scaled calibrated signal type is: {type(scaledCalibSignalInt16)}")
-        log.debug(f"scaled calibrated signal sample type is: {scaledCalibSignalInt16.dtype}")
-        log.debug(f"scaled calibrated signal sample size is: {scaledCalibSignalInt16.itemsize} bytes")
+        log.debug(f"scaled calibrated signal size is: {scaledSignal.size}")
+        log.debug(f"scaled calibrated signal type is: {type(scaledSignal)}")
+        log.debug(f"scaled calibrated signal sample type is: {scaledSignal.dtype}")
+        log.debug(f"scaled calibrated signal sample size is: {scaledSignal.itemsize} bytes")
 
-        if scaledCalibSignalInt16 is not None:
-            # write calibrated wav file
+        if scaledSignal is not None:
+            # write calibrated wav file with 'wave' package library
             wavFileName = wav.deriveWavFileName('_' + rawFileName)
+            scaledSignalInt16 = wav.scaleSignalFloatTo16bitPCM(scaledSignal)
+            if args.intermediate:
+                numpy.savetxt('signal_scaled.txt', scaledSignalInt16)
             wav.writeMono16bit(wavFileName, sampleRate,
-                               scaledCalibSignalInt16)
+                               scaledSignalInt16)
+            # write calibrated wav file with 'audiofile' package library
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
             audiofile.writeWavMono16bit(wavFileName, sampleRate,
-                                        scaledCalibSignalInt16,
+                                        scaledSignal,
                                         essentialMetadataFromRaw)
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
@@ -132,9 +129,7 @@ if __name__ == "__main__":
             # need to convert uint16 to int16
             # Steps: convert to volts, normalise and scale back to signed int16
             volts = calibration.toVolts(binData)
-            normaliasedSignal = calibration.scaleToBinary(volts,
-                                                          rawdat.BITS_PER_SAMPLE)
-            scaledSignalInt16 = normaliasedSignal.astype(numpy.int16)
+            scaledSignalInt16 = wav.scaleSignalFloatTo16bitPCM(volts)
             # write normalised scaled but still raw uncalibrated data into a wav file
             wavFileName = wav.deriveWavFileName(rawFileName)
             wav.writeMono16bit(wavFileName, sampleRate, scaledSignalInt16)

@@ -272,7 +272,17 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     freqFFT = numpy.arange(0, fmax + df, df)
     # MC note: the interpolation function numpy.interp() has a different
     #          params order compared with matlab function interp1()
-    calSpecInt = numpy.interp(freqFFT, calFreq, calSpec)
+    # calSpecInt = numpy.interp(freqFFT, calFreq, calSpec)
+
+    # --- Let's try scipy.interpolate.interp1d instead ---
+    # Create the interpolation function
+    # (which could be extracted from this library function
+    # and done only once per calibration file, not per each data file)
+    interp_func = scipy.interpolate.interp1d(calFreq, calSpec,
+                                             kind='linear',
+                                             fill_value="extrapolate")
+    # Interpolate the values (results are the same as with numpy.interp())
+    calSpecInt = interp_func(freqFFT)
 
     # Ignore calibration values below 5 Hz to avoid inadequate correction
     N5Hz = numpy.where(freqFFT <= 5)[0]
@@ -347,7 +357,7 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     # MC note: we cut off the imaginary component and use only real,
     #          as python math libs leave non-zero imaginary component
-    #          artifacts - a consequnece of floats implementation
+    #          artifacts - a consequence of floats implementation
     calibratedSignal = calibratedSignal.real
 
     # debugging...
@@ -364,33 +374,20 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
     return calibratedSignal
 
 
-def scaleToBinary(signal: numpy.ndarray, bitsPerSample: int) -> numpy.ndarray:
+def scale(signal: numpy.ndarray) -> (numpy.ndarray, float):
     """
     scaling of output for writing into wav file
 
     :param signal: audio data/signal in volts
     :param bitsPerSample: bits per sample
-    :return: scaled audio signal
+    :return: scaled audio signal as numpy.ndarray
+    :return: scaleFactor as float
     """
     # scaling as per Sasha's matlab code
-    normaliseFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(signal))))
-    normalisedSignal = signal / normaliseFactor
+    scaleFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(signal))))
+    normalisedSignal = signal / scaleFactor
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_normalised.txt', normalisedSignal)
 
-    # debugging...
-    normalisedMin = numpy.min(normalisedSignal)
-    normalisedMax = numpy.max(normalisedSignal)
-    log.debug(f"Min sample value in the normalised signal is: {normalisedMin}")
-    log.debug(f"Max sample value in the normalised signal is: {normalisedMax}")
-
-    normalizedSignal = (normalisedSignal - normalisedMin) / (normalisedMax - normalisedMin) * 2 - 1
-    toInt16Factor = ((1 << (bitsPerSample - 1)) - 1)
-    signalBinFloat = normalizedSignal * toInt16Factor
-    roundedSignal = numpy.round(signalBinFloat)
-
-    if doWriteIntermediateResults:
-        numpy.savetxt('signal_scaled.txt', roundedSignal)
-
-    return(roundedSignal)
+    return normalisedSignal, scaleFactor

@@ -41,6 +41,22 @@ def deriveWavFileName(rawFileName: str) -> str:
     return wavFileName
 
 
+def scaleSignalFloatTo16bitPCM(signal: numpy.ndarray) -> numpy.ndarray:
+    bitsPerSample = 16
+    signalMin = numpy.min(signal)
+    signalMax = numpy.max(signal)
+    log.debug(f"Min sample value in the normalised signal is: {signalMin}")
+    log.debug(f"Max sample value in the normalised signal is: {signalMax}")
+
+    normalizedSignal = (signal - signalMin) / (signalMax - signalMin) * 2 - 1
+    toInt16Factor = ((1 << (bitsPerSample - 1)) - 1)
+    signalBinFloat = normalizedSignal * toInt16Factor
+    roundedSignal = numpy.round(signalBinFloat)
+    scaledSignalInt16 = roundedSignal.astype(numpy.int16)
+
+    return scaledSignalInt16
+
+
 def writeMono16bit(wavFileName: str,
                    sampleRate: float,
                    binData: numpy.ndarray):
@@ -56,6 +72,10 @@ def writeMono16bit(wavFileName: str,
     :param sampleRate: audio sampling rate
     :param binData: raw audio data
     """
+    # Ensure binData is int16
+    if binData.dtype != numpy.int16:
+        raise ValueError("binData must be of type numpy.int16")
+
     # Open the WAV file
     try:
         with wave.open(wavFileName, 'wb') as wavFile:

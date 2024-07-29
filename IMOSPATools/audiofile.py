@@ -52,11 +52,6 @@ def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
                            as json string. 
     :return: None
     """
-    # Write WAV file with optional metadata as comment
-    # Ensure binData is int16
-    if binData.dtype != numpy.int16:
-        raise ValueError("binData must be of type numpy.int16")
-
     if metadataStruct is not None:
         # Micro$oft wave format does not support custom metadata.
         # The workaround is: Format metadata into a json string and
