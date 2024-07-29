@@ -178,8 +178,11 @@ def testConjugateSymmetry(spectrum: numpy.ndarray) -> bool:
     """
     retVal = True
     N = len(spectrum)
-    if spectrum[0] != spectrum[0].real:  # DC component should be real
-        log.error("DC component of spectrum is not real.")
+    # DC component should be real
+    # if spectrum[0] != spectrum[0].real:
+    # if spectrum[0].imag != 0.0:
+    if not numpy.isclose(spectrum[0].imag, 0):
+        log.error(f"DC component of spectrum {spectrum[0]} is not real.")
         retVal = False
     if N % 2 != 0:  # Spectrum shall consist of even number of elements
         log.error("Spectrum does not consist of odd number of elements.")
