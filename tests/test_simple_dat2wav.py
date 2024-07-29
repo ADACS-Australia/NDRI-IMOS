@@ -11,8 +11,14 @@ log = logging.getLogger('IMOSPATools')
 calibration.doWriteIntermediateResults = False
 
 
-def test_simple_dat2wav():
-    rawFileName = 'tests/data/Rottnest_3154/502DB01D.DAT'
+def simple_dat2wav(rawFileName: str) -> bool:
+    """
+    Test conversion from raw DAT file to MS wave
+    - No calibration included.
+    - Only simple read, convert to volts, normalise and write as wav.
+    - Metadata not included in the wav header
+    - using python wav package
+    """
     if not os.path.exists(rawFileName):
         log.error(f'Raw dat file {rawFileName} not found!')
         raise AssertionError(f"FAILED: the following test data file does not exist: {rawFileName}")
@@ -45,9 +51,20 @@ def test_simple_dat2wav():
         except:
             raise AssertionError(f"FAILED: normalise and write wave file {wavFileName}")
     else:
-        logMsg = "Something went wrong, there is no audio signal data to write to wav file."
+        logMsg = "Something went wrong, there is no audio signal data to write to a wav file."
         log.error(logMsg)
         raise AssertionError(logMsg)
+
+    return True
+
+
+def test_simple_dat2wav():
+    dat1 = 'tests/data/Rottnest_3154/502DB01D.DAT'
+    dat2 = 'tests/data/KI_3501/583E9500.DAT'
+    dat3 = 'tests/data/Portland_3092/4F480851.DAT'
+    simple_dat2wav(dat1)
+    simple_dat2wav(dat2)
+    simple_dat2wav(dat3)
 
 
 if __name__ == "__main__":
