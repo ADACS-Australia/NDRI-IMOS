@@ -41,9 +41,7 @@ def simple_dat2wav(rawFileName: str) -> bool:
             # need to convert uint16 to int16
             # Steps: convert to volts, normalise and scale back to signed int16
             volts = calibration.toVolts(binData)
-            normaliasedSignal = calibration.scaleToBinary(volts,
-                                                      rawdat.BITS_PER_SAMPLE)
-            scaledSignalInt16 = normaliasedSignal.astype(numpy.int16)
+            scaledSignalInt16 = wav.scaleSignalFloatTo16bitPCM(volts)
 
             # write normalised scaled but still raw uncalibrated data into a wav file
             wavFileName = wav.deriveWavFileName(rawFileName)

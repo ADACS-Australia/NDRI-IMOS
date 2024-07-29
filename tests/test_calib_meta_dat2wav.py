@@ -108,24 +108,23 @@ def calib_dat2wav(rawFileName: str,
     try:
         volts = calibration.toVolts(binData)
         calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, sampleRate)
-        scaledCalibSignal = calibration.scaleToBinary(calibratedSignal,
-                                                      rawdat.BITS_PER_SAMPLE)
-        scaledCalibSignalInt16 = scaledCalibSignal.astype(numpy.int16)
+        scaledSignal, scaleFactor = calibration.scale(calibratedSignal)
+
     except:
         raise AssertionError(f"FAILED: calibrate and scale audio file {rawFileName}")
 
     # debugging...
-    log.debug(f"scaled calibrated signal size is: {scaledCalibSignalInt16.size}")
-    log.debug(f"scaled calibrated signal type is: {type(scaledCalibSignalInt16)}")
-    log.debug(f"scaled calibrated signal sample type is: {scaledCalibSignalInt16.dtype}")
-    log.debug(f"scaled calibrated signal sample size is: {scaledCalibSignalInt16.itemsize} bytes")
+    log.debug(f"scaled calibrated signal size is: {scaledSignal.size}")
+    log.debug(f"scaled calibrated signal type is: {type(scaledSignal)}")
+    log.debug(f"scaled calibrated signal sample type is: {scaledSignal.dtype}")
+    log.debug(f"scaled calibrated signal sample size is: {scaledSignal.itemsize} bytes")
 
-    if scaledCalibSignalInt16 is not None:
+    if scaledSignal is not None:
         try:
             # write calibrated wav file
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
             audiofile.writeWavMono16bit(wavFileName, sampleRate,
-                                        scaledCalibSignalInt16,
+                                        scaledSignal,
                                         essentialMetadataFromRaw)
         except:
             raise AssertionError(f"FAILED: write wave file {wavFileName}")
