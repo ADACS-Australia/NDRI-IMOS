@@ -130,6 +130,7 @@ if __name__ == "__main__":
             # Steps: convert to volts, normalise and scale back to signed int16
             volts = calibration.toVolts(binData)
             scaledSignalInt16 = wav.scaleSignalFloatTo16bitPCM(volts)
+
             # write normalised scaled but still raw uncalibrated data into a wav file
             wavFileName = wav.deriveWavFileName(rawFileName)
             wav.writeMono16bit(wavFileName, sampleRate, scaledSignalInt16)

@@ -49,7 +49,7 @@ def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
     :param metadataStruct: a dataclass structure with metadata. 
                            some go into the mandatory file header,
                            all then as metadata stored in comment tag
-                           as json string. 
+                           as json string.
     :return: None
     """
     if metadataStruct is not None:

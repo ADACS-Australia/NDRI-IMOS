@@ -116,6 +116,7 @@ def writeMono16bit(wavFileName: str,
 #            log.error(logMsg + f"\nException {e}")
 #            raise IMOSAcousticWavException(logMsg)
 
+
 def addIMOSMetadata(wavFileName: str, metadataStruct: WavMetadataEssential):
     """
     Generate the wav filename from raw DAT file
