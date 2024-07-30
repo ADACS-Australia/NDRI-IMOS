@@ -19,6 +19,7 @@ class MetadataEssential:
     durationHeader: int = 0
     startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    scaleFactor: int = 1
 
 
 def deriveOutputFileName(rawFileName: str, ext: str) -> str:
@@ -86,7 +87,7 @@ def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
     log.info(f"Written {fileName} with meta data.")
 
 
-def getMetadata(fileName: str) -> str:
+def extractMetadata(fileName: str) -> str:
     with soundfile.SoundFile(fileName, mode='r') as sf:
         # data, samplerate = sf.read(output_filename)
         metadata = sf.info(output_filename).metadata
