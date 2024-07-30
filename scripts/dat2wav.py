@@ -70,7 +70,7 @@ if __name__ == "__main__":
     binData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(rawFileName)
 
-    essentialMetadataFromRaw = wav.WavMetadataEssential(
+    essentialMetadata = audiofile.MetadataEssential(
         numChannels=numChannels,
         sampleRate=sampleRate,
         durationHeader=durationHeader,
@@ -119,7 +119,7 @@ if __name__ == "__main__":
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
             audiofile.writeWavMono16bit(wavFileName, sampleRate,
                                         scaledSignal,
-                                        essentialMetadataFromRaw)
+                                        essentialMetadata)
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)

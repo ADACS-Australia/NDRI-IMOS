@@ -56,7 +56,7 @@ def calib_dat2wav(rawFileName: str,
         raise AssertionError(f"FAILED: read raw DAT file {rawFileName}")
 
     try:
-        essentialMetadataFromRaw = wav.WavMetadataEssential(
+        essentialMetadata = audiofile.MetadataEssential(
             numChannels=numChannels,
             sampleRate=sampleRate,
             durationHeader=durationHeader,
@@ -65,7 +65,7 @@ def calib_dat2wav(rawFileName: str,
         )
     except:
         raise AssertionError(f"FAILED: extract essential metadata from the header of raw DAT file {rawFileName}")
-        
+
     # debugging...
     log.debug(f"raw .DAT signal size is: {binData.size}")
     log.debug(f"raw .DAT signal type is: {type(binData)}")
@@ -125,7 +125,7 @@ def calib_dat2wav(rawFileName: str,
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
             audiofile.writeWavMono16bit(wavFileName, sampleRate,
                                         scaledSignal,
-                                        essentialMetadataFromRaw)
+                                        essentialMetadata)
         except:
             raise AssertionError(f"FAILED: write wave file {wavFileName}")
     else:
