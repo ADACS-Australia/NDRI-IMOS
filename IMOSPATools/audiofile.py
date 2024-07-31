@@ -1,6 +1,7 @@
 import soundfile
 import logging
 import numpy
+import re
 import json
 from datetime import datetime, timezone
 from dataclasses import dataclass, asdict
@@ -89,6 +90,54 @@ def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
 
 def extractMetadata(fileName: str) -> str:
     with soundfile.SoundFile(fileName, mode='r') as sf:
-        # data, samplerate = sf.read(output_filename)
-        metadata = sf.info(output_filename).metadata
+        # data, samplerate = sf.read(fileName)
+        metadata = sf.info(fileName)
         return metadata.get('comment')
+
+
+def extractMetadataJson(fileName: str):
+    # Define the regular expression pattern to find the JSON-like structure
+    regexpICMT = r'ICMT : ({.*?})'
+
+    try:
+        with soundfile.SoundFile(fileName, mode='r') as sf:
+            info = sf.extra_info
+    except (IOError, OSError, soundfile.LibsndfileError) as e:
+        logMsg = f"Error inspecting audio file {fileName}"
+        log.error(logMsg + f"\nException {e}")
+        raise IMOSAcousticAudioFileException(logMsg)
+
+    # Search for the pattern in the file content
+    match = re.search(regexpICMT, info, re.DOTALL)
+    if match:
+        json_str = match.group(1)
+        try:
+            # Parse the JSON string
+            metadata = json.loads(json_str)
+            return metadata
+        except json.JSONDecodeError:
+            logMsg = f"Error: Failed to decode JSON from audio file {fileName}"
+            log.error(logMsg + f"\nException {e}")
+            raise IMOSAcousticAudioFileException(logMsg)
+    else:
+        logMsg = f"Error: Metadata not found in audio file {fileName}"
+        log.error(logMsg)
+        raise IMOSAcousticAudioFileException(logMsg)
+
+
+def loadInspect(fileName: str):
+    try:
+        with soundfile.SoundFile(fileName, mode='r') as sf:
+            signal = sf.read()
+            sampleRate = sf.samplerate
+            extraInfo = sf.extra_info
+            print(extraInfo)
+            # IMOSMetaData = extraInfo.get('comment')
+            # print(IMOSMetaData)
+            recordDuration = signal.size / sampleRate
+            print(f"Audio record duration {recordDuration:.2f}s")
+            print(f"Sampling rate {sampleRate}Hz")
+    except (IOError, OSError, soundfile.LibsndfileError) as e:
+        logMsg = f"Error inspecting audio file {fileName}"
+        log.error(logMsg + f"\nException {e}")
+        raise IMOSAcousticAudioFileException(logMsg)
