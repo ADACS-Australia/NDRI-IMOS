@@ -54,6 +54,9 @@ def scaleSignalFloatTo16bitPCM(signal: numpy.ndarray) -> numpy.ndarray:
     roundedSignal = numpy.round(signalBinFloat)
     scaledSignalInt16 = roundedSignal.astype(numpy.int16)
 
+    log.debug(f"Maximum abs amplitude of the calibrated signal scaled to int16: \
+{numpy.max(numpy.abs(scaledSignalInt16))}")
+
     return scaledSignalInt16
 
 
@@ -117,6 +120,10 @@ def writeMono16bit(wavFileName: str,
 #            raise IMOSAcousticWavException(logMsg)
 
 
+
+# the following is an experimental code that actually does not work 
+# with the standard python wav library.
+# Eventually decided to use soundfile library instead (see apudiofile.py)
 def addIMOSMetadata(wavFileName: str, metadataStruct: WavMetadataEssential):
     """
     Generate the wav filename from raw DAT file
