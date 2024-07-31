@@ -40,7 +40,7 @@ def deriveOutputFileName(rawFileName: str, ext: str) -> str:
 
 
 def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
-                      metadataStruct: MetadataEssential=None) -> None:
+                      metadataStruct: MetadataEssential=None, fileFormat='WAV') -> None:
     """
     Write audio signal data into a MS wave file
     !@#$%^& TODO use the struct values rather than extra param sampleRate
@@ -75,7 +75,7 @@ def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
 
     try:
         with soundfile.SoundFile(fileName, mode='w+', samplerate=int(sampleRate),
-                                 channels=1, subtype='PCM_16', format='WAV') as sf:
+                                 channels=1, subtype='PCM_16', format=fileFormat) as sf:
             # __setattr__(self, name, value) is not part of official documented API
             # see https://python-soundfile.readthedocs.io/en/0.11.0/_modules/soundfile.htm
             sf.__setattr__('comment', metadataString)
@@ -88,14 +88,7 @@ def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
     log.info(f"Written {fileName} with meta data.")
 
 
-def extractMetadata(fileName: str) -> str:
-    with soundfile.SoundFile(fileName, mode='r') as sf:
-        # data, samplerate = sf.read(fileName)
-        metadata = sf.info(fileName)
-        return metadata.get('comment')
-
-
-def extractMetadataJson(fileName: str):
+def extractMetadataStr(fileName: str) -> str:
     # Define the regular expression pattern to find the JSON-like structure
     regexpICMT = r'ICMT : ({.*?})'
 
@@ -110,22 +103,51 @@ def extractMetadataJson(fileName: str):
     # Search for the pattern in the file content
     match = re.search(regexpICMT, info, re.DOTALL)
     if match:
-        json_str = match.group(1)
-        try:
-            # Parse the JSON string
-            metadata = json.loads(json_str)
-            return metadata
-        except json.JSONDecodeError:
-            logMsg = f"Error: Failed to decode JSON from audio file {fileName}"
-            log.error(logMsg + f"\nException {e}")
-            raise IMOSAcousticAudioFileException(logMsg)
+        metadataString = match.group(1)
+        return metadataString
     else:
-        logMsg = f"Error: Metadata not found in audio file {fileName}"
+        logMsg = f"Error: Metadata (as ICMT tag) not found in audio file {fileName}"
         log.error(logMsg)
         raise IMOSAcousticAudioFileException(logMsg)
 
 
-def loadInspectIMOSFile(fileName: str) -> soundfile.SoundFile:
+def extractMetadataJson(fileName: str):
+    jsonStr = extractMetadataStr(fileName)
+    try:
+        # Parse the JSON string
+        metadata = json.loads(jsonStr)
+        return metadata
+    except json.JSONDecodeError:
+        logMsg = f"Error: Failed to decode JSON from audio file {fileName}"
+        log.error(logMsg + f"\nException {e}")
+        raise IMOSAcousticAudioFileException(logMsg)
+
+
+def extractMetadataStruct(fileName: str) -> MetadataEssential:
+    metadataJson = extractMetadataJson(fileName)
+    try:
+        metadataDict = json.loads(jsonStr)
+        # Parse datetime strings
+        startTime = datetime.strptime(metadata_dict['startTime'], "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=timezone.utc)
+        endTime = datetime.strptime(metadata_dict['endTime'], "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=timezone.utc)
+
+        # Create MetadataEssential object
+        metadata = MetadataEssential(
+            numChannels=int(metadata_dict['numChannels']),
+            sampleRate=int(float(metadata_dict['sampleRate'])),
+            durationHeader=int(float(metadata_dict['durationHeader'])),
+            startTime=start_time,
+            endTime=end_time,
+            scaleFactor=int(float(metadata_dict['scaleFactor']))
+        )
+        return metadata
+    except (json.JSONDecodeError, KeyError, ValueError) as e:
+        logMsg = f"Error: Failed to process metadata - {str(e)}"
+        log.error(logMsg + f"\nException {e}")
+        raise IMOSAcousticAudioFileException(logMsg)
+
+
+def loadInspect(fileName: str) -> soundfile.SoundFile:
     try:
         with soundfile.SoundFile(fileName, mode='r') as sf:
             signal = sf.read()
