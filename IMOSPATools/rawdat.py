@@ -278,7 +278,6 @@ def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, d
             log.error(logMsg + f"\nException {e}")
             raise IMOSAcousticRAWReadException(logMsg)
 
-        binDataSuccess = False
         # !@#$%^&* Warning: assuming single channel only,
         # eg: C0=1 C1=0 C2=0 C3=0 in the header.
         # as Sasha Gavrilov suggested there are no data files
