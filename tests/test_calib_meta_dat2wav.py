@@ -123,7 +123,7 @@ def calib_dat2wav(rawFileName: str,
         try:
             # write calibrated wav file
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
-            audiofile.writeWavMono16bit(wavFileName, sampleRate,
+            audiofile.writeMono16bit(wavFileName, sampleRate,
                                         scaledSignal,
                                         essentialMetadata)
         except:
