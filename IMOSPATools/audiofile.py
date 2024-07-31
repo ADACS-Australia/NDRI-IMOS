@@ -27,7 +27,7 @@ def deriveOutputFileName(rawFileName: str, ext: str) -> str:
     Generate the wav filename from raw DAT file
 
     :param rawFileName: filename of the raw (DAT) file from which the vav filename shall be derived
-    :return: filename of the wav file name 
+    :return: filename of the wav file name
     """
     # Generate the new filename with the .wav suffix
     if rawFileName.endswith(".DAT"):
