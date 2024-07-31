@@ -39,7 +39,7 @@ def deriveOutputFileName(rawFileName: str, ext: str) -> str:
     return outputFileName
 
 
-def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
+def writeMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
                       metadataStruct: MetadataEssential=None, fileFormat='WAV') -> None:
     """
     Write audio signal data into a MS wave file
@@ -74,7 +74,7 @@ def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
         metadataString = "IMOS audio"
 
     try:
-        with soundfile.SoundFile(fileName, mode='w+', samplerate=int(sampleRate),
+        with soundfile.SoundFile(fileName, mode='w', samplerate=int(sampleRate),
                                  channels=1, subtype='PCM_16', format=fileFormat) as sf:
             # __setattr__(self, name, value) is not part of official documented API
             # see https://python-soundfile.readthedocs.io/en/0.11.0/_modules/soundfile.htm
@@ -88,9 +88,40 @@ def writeWavMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
     log.info(f"Written {fileName} with meta data.")
 
 
+def detectAudioFormat(fileName: str) -> str:
+    # Detect whether it is WAVE or FLAC file.
+
+    # Read the first 12 bytes of the file
+    with open(fileName, 'rb') as file:
+        header = file.read(12)
+    # Check for WAVE format
+    if header.startswith(b'RIFF') and header[8:12] == b'WAVE':
+        return "WAVE"
+
+    # Check for FLAC format
+    elif header.startswith(b'fLaC'):
+        return "FLAC"
+
+    # If neither WAVE nor FLAC
+    else:
+        return "Unknown format"
+
+
 def extractMetadataStr(fileName: str) -> str:
     # Define the regular expression pattern to find the JSON-like structure
-    regexpICMT = r'ICMT : ({.*?})'
+    regexp_ICMT = r'ICMT\s*:\s*({.*?})'
+    regexp_comment = r'comment\s*:\s*({.*?})'
+
+    audioFormat = detectAudioFormat(fileName)
+    log.debug(f"Detected file format {audioFormat}")
+
+    if audioFormat == "WAVE":
+        regexpMeta = regexp_ICMT
+    elif audioFormat == "FLAC":
+        regexpMeta = regexp_comment
+    else:
+        regexpMeta = ""
+        raise IMOSAcousticAudioFileException(f"Unsupported audio format for file: {fileName}, expected WAVE or FLAC.")
 
     try:
         with soundfile.SoundFile(fileName, mode='r') as sf:
@@ -101,7 +132,7 @@ def extractMetadataStr(fileName: str) -> str:
         raise IMOSAcousticAudioFileException(logMsg)
 
     # Search for the pattern in the file content
-    match = re.search(regexpICMT, info, re.DOTALL)
+    match = re.search(regexpMeta, info, re.DOTALL)
     if match:
         metadataString = match.group(1)
         return metadataString

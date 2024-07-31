@@ -119,9 +119,11 @@ if __name__ == "__main__":
 
             # write calibrated wav file with 'audiofile' package library
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
-            audiofile.writeWavMono16bit(wavFileName, sampleRate,
-                                        scaledSignal,
-                                        essentialMetadata)
+            audiofile.writeMono16bit(wavFileName, sampleRate,
+                                     scaledSignal, essentialMetadata, 'WAV')
+            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
+            audiofile.writeMono16bit(wavFileName, sampleRate,
+                                     scaledSignal, essentialMetadata, 'FLAC')
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)
