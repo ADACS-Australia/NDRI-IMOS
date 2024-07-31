@@ -148,7 +148,7 @@ def extractMetadataJson(fileName: str):
         # Parse the JSON string
         metadata = json.loads(jsonStr)
         return metadata
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
         logMsg = f"Error: Failed to decode JSON from audio file {fileName}"
         log.error(logMsg + f"\nException {e}")
         raise IMOSAcousticAudioFileException(logMsg)
