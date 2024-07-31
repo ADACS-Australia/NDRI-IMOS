@@ -100,6 +100,7 @@ if __name__ == "__main__":
         volts = calibration.toVolts(binData)
         calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, sampleRate)
         scaledSignal, scaleFactor = calibration.scale(calibratedSignal)
+        essentialMetadata.scaleFactor = scaleFactor
 
         # debugging...
         log.debug(f"scaled calibrated signal size is: {scaledSignal.size}")
@@ -115,6 +116,7 @@ if __name__ == "__main__":
                 numpy.savetxt('signal_scaled.txt', scaledSignalInt16)
             wav.writeMono16bit(wavFileName, sampleRate,
                                scaledSignalInt16)
+
             # write calibrated wav file with 'audiofile' package library
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
             audiofile.writeWavMono16bit(wavFileName, sampleRate,
