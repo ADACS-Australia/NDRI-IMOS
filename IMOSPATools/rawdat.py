@@ -235,7 +235,6 @@ def readRawTimesFromFooter(file: _io.BufferedReader,
         logMsg = "Footer (Record Marker) not found in file " + file.name + ". File corrupted?"
         log.error(logMsg)
         raise IMOSAcousticRAWReadException(logMsg)
-        return False
 
     footerOffset = fileOffset + footerPos
     log.debug(f'footer position = {footerOffset}')
@@ -259,24 +258,25 @@ def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, d
     """
     Read RAW file
 
-    :param fileName: file name (can be relative/full path) 
+    :param fileName: file name (can be relative/full path)
 
     :return: sampling rate
     :return: audio data as numpy array (None if failed to read)
     :return: number of channels, sampling rate,
     :return: record duration as read from the header
-    :return: record start time and end time from the footer, as datetime class        
+    :return: record start time and end time from the footer, as datetime class
     """
     binData = None
 
     log.debug(f'Attempting to read raw DAT audio file {fileName}')
-    
+
     with open(fileName, 'rb') as file:
         try:
             numChannels, sampleRate, durationHeader = readRawHeaderEssentials(file)
-        except IMOSAcousticRAWReadException as E:
-            # print(E)
-            exit(-1)
+        except IMOSAcousticRAWReadException as e:
+            logMsg = f"Error reading header from {fileName}"
+            log.error(logMsg + f"\nException {e}")
+            raise IMOSAcousticRAWReadException(logMsg)
 
         binDataSuccess = False
         # !@#$%^&* Warning: assuming single channel only,
@@ -285,12 +285,19 @@ def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, d
         # with more than one channel
         try:
             binData = readRawBinData(file, sampleRate, durationHeader)
-        except IMOSAcousticRAWReadException as E:
-            # print(E)
-            exit(-1)
+        except IMOSAcousticRAWReadException as e:
+            logMsg = f"Error binary data from {fileName}"
+            log.error(logMsg + f"\nException {e}")
+            raise IMOSAcousticRAWReadException(logMsg)
+
         fileTailOffset = file.tell()
 
-        startTime, endTime = readRawTimesFromFooter(file, fileTailOffset)
+        try:
+            startTime, endTime = readRawTimesFromFooter(file, fileTailOffset)
+        except IMOSAcousticRAWReadException as e:
+            logMsg = f"Error binary data from {fileName}"
+            log.error(logMsg + f"\nException {e}")
+            raise IMOSAcousticRAWReadException(logMsg)
 
         # done reading input raw/.DAT file
         file.close()
