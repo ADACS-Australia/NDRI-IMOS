@@ -12,9 +12,11 @@ log = logging.getLogger('IMOSPATools')
 calibration.doWriteIntermediateResults = False
 
 
+
+
 def read_calib_parameters(file_path):
     parameters = {}
-    
+
     with open(file_path, 'r') as file:
         # Read all lines and split by newline character
         lines = file.read().splitlines()
@@ -126,6 +128,7 @@ def calib_dat2wavflac(rawFileName: str,
             audiofile.writeMono16bit(wavFileName, sampleRate,
                                         scaledSignal,
                                         essentialMetadata)
+            # write calibrated flac file
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
             audiofile.writeMono16bit(wavFileName, sampleRate,
                                      scaledSignal, essentialMetadata, 'FLAC')

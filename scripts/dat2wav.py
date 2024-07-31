@@ -121,6 +121,7 @@ if __name__ == "__main__":
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
             audiofile.writeMono16bit(wavFileName, sampleRate,
                                      scaledSignal, essentialMetadata, 'WAV')
+            # write calibrated flac file with 'audiofile' package library
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
             audiofile.writeMono16bit(wavFileName, sampleRate,
                                      scaledSignal, essentialMetadata, 'FLAC')
