@@ -125,18 +125,19 @@ def extractMetadataJson(fileName: str):
         raise IMOSAcousticAudioFileException(logMsg)
 
 
-def loadInspect(fileName: str):
+def loadInspectIMOSFile(fileName: str) -> soundfile.SoundFile:
     try:
         with soundfile.SoundFile(fileName, mode='r') as sf:
             signal = sf.read()
             sampleRate = sf.samplerate
             extraInfo = sf.extra_info
             print(extraInfo)
-            # IMOSMetaData = extraInfo.get('comment')
-            # print(IMOSMetaData)
+            print("----------------------------------------------------")
             recordDuration = signal.size / sampleRate
             print(f"Audio record duration {recordDuration:.2f}s")
             print(f"Sampling rate {sampleRate}Hz")
+            print(f"Maximum abs amplitude of the signal: {numpy.max(numpy.abs(signal))}")
+            return sf
     except (IOError, OSError, soundfile.LibsndfileError) as e:
         logMsg = f"Error inspecting audio file {fileName}"
         log.error(logMsg + f"\nException {e}")

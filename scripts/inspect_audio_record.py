@@ -21,6 +21,8 @@ def parseArgs():
                         help='Enable debug mode')
     parser.add_argument('--filename', '-f', required=True,
                         help='The name of the audio file to inspect.')
+    parser.add_argument('--json', '-j', action='store_true',
+                        help='extract and print IMOS specifci metadata as JSON.')
     args = parser.parse_args()
     return args
 
@@ -46,5 +48,6 @@ if __name__ == "__main__":
 
     audiofile.loadInspect(fileName)
 
-    mataJson = audiofile.extractMetadataJson(fileName)
-    print(f"Metadata extracted from file {fileName} as JSON:\n{mataJson}")
+    if args.json:
+        mataJson = audiofile.extractMetadataJson(fileName)
+        print(f"Metadata extracted from file {fileName} as JSON:\n{mataJson}")
