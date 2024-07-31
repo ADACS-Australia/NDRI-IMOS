@@ -35,9 +35,9 @@ def read_calib_parameters(file_path):
     return parameters
 
 
-def calib_dat2wav(rawFileName: str,
-                  calibFileName: str,
-                  calibParamsFileName: str) -> bool:
+def calib_dat2wavflac(rawFileName: str,
+                      calibFileName: str,
+                      calibParamsFileName: str) -> bool:
 
     if not os.path.exists(rawFileName):
         log.error(f'Raw dat file {rawFileName} not found!')
@@ -126,6 +126,9 @@ def calib_dat2wav(rawFileName: str,
             audiofile.writeMono16bit(wavFileName, sampleRate,
                                         scaledSignal,
                                         essentialMetadata)
+            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
+            audiofile.writeMono16bit(wavFileName, sampleRate,
+                                     scaledSignal, essentialMetadata, 'FLAC')
         except:
             raise AssertionError(f"FAILED: write wave file {wavFileName}")
     else:
@@ -186,7 +189,7 @@ def compare_wav_files(wav1: str, ref1: str):
     return are_close
 
 
-def test_calib_dat2wav():
+def test_calib_dat2wavflac():
     dat1 = 'tests/data/Rottnest_3154/502DB01D.DAT'
     cal1 = 'tests/data/Rottnest_3154/Calib_file/501E9BF5.DAT'
     par1 = 'tests/data/Rottnest_3154/Calib_file/Calib_data.TXT'
@@ -199,9 +202,9 @@ def test_calib_dat2wav():
     cal3 = 'tests/data/Portland_3092/Calib_file/4FEACA92.DAT'
     par3 = 'tests/data/Portland_3092/Calib_file/Calib_data.TXT'
 
-    calib_dat2wav(dat1, cal1, par1)
-    calib_dat2wav(dat2, cal2, par2)
-    calib_dat2wav(dat3, cal3, par3)
+    calib_dat2wavflac(dat1, cal1, par1)
+    calib_dat2wavflac(dat2, cal2, par2)
+    calib_dat2wavflac(dat3, cal3, par3)
 
 
 def nest_calib_dat2wav_reference():
@@ -220,4 +223,4 @@ if __name__ == "__main__":
                         #  seconds resolution is good enough for logging timestamp
                         datefmt='%Y-%m-%d %H:%M:%S')
 
-    test_calib_dat2wav()
+    test_calib_dat2wavflac()
