@@ -30,9 +30,27 @@ def read_calib_parameters(file_path):
                 # Convert to float
                 parameters[key] = float(value)
             except ValueError:
-                print(f"Warning: Could not convert '{value}' to a number for '{key}'")
+                msg = f"Warning: Could not convert '{value}' to a number for '{key}'"
+                print(msg)
+                raise AssertionError(msg)
 
     return parameters
+
+
+def load_float_array(file_path):
+    try:
+        # Load the file using numpy's loadtxt function
+        # We set dtype to float to ensure all values are treated as floats
+        arr = numpy.loadtxt(file_path, dtype=float)
+        return arr
+    except IOError:
+        msg = f"Error: Unable to read file '{file_path}'"
+        print(msg)
+        raise AssertionError(msg)
+    except ValueError:
+        msg = f"Error: File '{file_path}' contains invalid data. Ensure all lines contain valid float numbers."
+        print(msg)
+        raise AssertionError(msg)
 
 
 def calib_dat2wavflac(rawFileName: str,
@@ -140,15 +158,15 @@ def calib_dat2wavflac(rawFileName: str,
     return True
 
 
-def compare_wav_files(wav1: str, ref1: str):
+def compare_wav_files(wav: str, ref: str):
     # Open the first WAV file
-    with wave.open(wav1, 'rb') as wav_file1:
+    with wave.open(wav, 'rb') as wav_file1:
         params1 = wav_file1.getparams()
         frames1 = wav_file1.readframes(params1.nframes)
         samples1 = numpy.frombuffer(frames1, dtype=numpy.int16)
 
     # Open the second WAV file (reference)
-    with wave.open(ref1, 'rb') as wav_file2:
+    with wave.open(ref, 'rb') as wav_file2:
         params2 = wav_file2.getparams()
         frames2 = wav_file2.readframes(params2.nframes)
         samples2 = numpy.frombuffer(frames2, dtype=numpy.int16)
@@ -188,6 +206,10 @@ def compare_wav_files(wav1: str, ref1: str):
         raise AssertionError(logMsg)
 
     return are_close
+
+
+def compare_normalised_calib_signal():
+    return True
 
 
 def test_calib_dat2wavflac():
