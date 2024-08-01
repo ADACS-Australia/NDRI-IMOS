@@ -12,8 +12,6 @@ log = logging.getLogger('IMOSPATools')
 calibration.doWriteIntermediateResults = False
 
 
-
-
 def read_calib_parameters(file_path):
     parameters = {}
 
@@ -217,7 +215,6 @@ def nest_calib_dat2wav_reference():
 
 
 if __name__ == "__main__":
-
     # set debugging logging level so we see as much as pos in testing
     logLevel = logging.DEBUG
 
