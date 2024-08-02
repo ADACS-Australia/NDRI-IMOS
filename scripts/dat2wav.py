@@ -98,7 +98,8 @@ if __name__ == "__main__":
             logging.error("Sample rate is different between the audio record and calibration file.")
 
         volts = calibration.toVolts(binData)
-        calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, sampleRate)
+        # calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, sampleRate)
+        calibratedSignal = calibration.calibrateReal(volts, cnl, hs, calSpec, calFreq, sampleRate)
         scaledSignal, scaleFactor = calibration.scale(calibratedSignal)
         essentialMetadata.scaleFactor = scaleFactor
 

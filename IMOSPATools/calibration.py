@@ -232,7 +232,8 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
               calSpec: numpy.ndarray, calFreq: numpy.ndarray,
               fSample: float) -> numpy.ndarray:
     """
-    calibrate sound record
+    calibrate sound record using regular FFT
+    (functions numpy.fft.fft(), numpy.fft.ifft())
 
     :param volts: audio data/signal in Volts
     :param cnl: calibration noise level (dB re V^2/Hz)
@@ -372,6 +373,109 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
         numpy.savetxt('signal_calibrated.txt', calibratedSignal)
 
     return calibratedSignal
+
+
+def calibrateReal(volts: numpy.ndarray, cnl: float, hs: float,
+                  calSpec: numpy.ndarray, calFreq: numpy.ndarray,
+                  fSample: float) -> numpy.ndarray:
+    """
+    calibrate sound record using real FFT
+    (function numpy.fft.rfft(), numpy.fft.irfft())
+
+    :param volts: audio data/signal in Volts
+    :param cnl: calibration noise level (dB re V^2/Hz)
+    :param hs: hydrophone sensitivity (dB re V/uPa)
+    :param calSpec: calibration spectrum
+    :param calFreq: calibration frequencies
+    :param fSample: sampling frequency of the recorder sensor
+    :return: calibrated audio signal
+    """
+    # Sanity check of the input audio signal (parameter volts) for NaNs
+    if numpy.isnan(volts).any():
+        logMsg = "Audio signal in volts contains NaN value(s)"
+        log.error(logMsg)
+        raise IMOSAcousticCalibException(logMsg)
+
+    # Make high-pass filter to remove slow varying DC offset
+    # 5th order Butterworth filter with a critical frequency 10/sampling rate
+    b, a = scipy.signal.butter(5, 5/fSample*2, btype='high', output='ba')
+    # apply the filter on the input signal
+    signal = scipy.signal.lfilter(b, a, volts)
+
+    if doWriteIntermediateResults:
+        numpy.savetxt('signal_filtered.txt', signal, fmt='%.5f')
+        # diagplot.dp.add_plot(signal, "Filtered Signal Volts")
+
+    # Sanity check if filtered audio signal sill has no NaNs
+    if numpy.isnan(signal).any():
+        logMsg = "Audio signal in volts contains NaN value(s)"
+        log.error(logMsg)
+        raise IMOSAcousticCalibException(logMsg)
+    log.debug(f"filtered signal size is: {signal.size}")
+
+    # make correction for calibration data to get signal amplitude in uPa:
+    fmax = calFreq[len(calFreq) - 1]
+    df = fmax * 2 / len(signal)
+    # generate a set of frequencies as ndarray
+    freqFFT = numpy.arange(0, fmax + df, df)
+    # MC note: the interpolation function numpy.interp() has a different
+    #          params order compared with matlab function interp1()
+    # calSpecInt = numpy.interp(freqFFT, calFreq, calSpec)
+
+    # --- Let's try scipy.interpolate.interp1d instead ---
+    # Create the interpolation function
+    # (which could be extracted from this library function
+    # and done only once per calibration file, not per each data file)
+    interp_func = scipy.interpolate.interp1d(calFreq, calSpec,
+                                             kind='linear',
+                                             fill_value="extrapolate")
+    # Interpolate the values (results are the same as with numpy.interp())
+    calSpecInt = interp_func(freqFFT)
+
+    # Ignore calibration values below 5 Hz to avoid inadequate correction
+    N5Hz = numpy.where(freqFFT <= 5)[0]
+    calSpecInt[N5Hz] = calSpecInt[N5Hz[-1]]
+
+    if doWriteIntermediateResults:
+        numpy.savetxt('freq_fft.txt', freqFFT, fmt='%.3f')
+        numpy.savetxt('calSpecInt.txt', calSpecInt)
+
+    # debugging...
+    log.debug(f'cal spec beg {calSpecInt[0:3]}')
+    log.debug(f'cal spec end {calSpecInt[-3:][::-1]}')
+
+    spec = numpy.fft.rfft(signal)
+    log.debug(f"spec.size = {spec.size}")
+    if doWriteIntermediateResults:
+        numpy.savetxt('spec.txt', spec, fmt='%.10f')
+
+    log.debug(f'sig spectrum DC offset {spec[0]}')
+    log.debug(f'sig spectrum Nyquist freq {spec[-1]}')
+
+    # Inverse FFT
+    # - no fiddling with mirroring of the power spectrum
+    #   and making it symmetric needed in case of using
+    #   rfft() / irfft()
+    pwrSpec = calSpecInt
+    log.debug(f"pwrSpec.size = {pwrSpec.size}")
+    specToInverse = spec / numpy.sqrt(pwrSpec)
+    log.debug(f"specToInverse.size = {specToInverse.size}")
+    calibratedSignal = numpy.fft.irfft(specToInverse)
+
+
+    # debugging...
+    # print(calibratedSignal[:5])
+    # print(calibratedSignal[-5:])
+
+    log.debug(f"calibrated signal size is: {calibratedSignal.size}")
+    log.debug(f"calibrated signal sample type is: {calibratedSignal.dtype}")
+    log.debug(f"calibrated signal sample size is: {calibratedSignal.itemsize} bytes")
+
+    if doWriteIntermediateResults:
+        numpy.savetxt('signal_calibrated.txt', calibratedSignal)
+
+    return calibratedSignal
+
 
 
 def scale(signal: numpy.ndarray) -> (numpy.ndarray, float):
