@@ -158,6 +158,111 @@ def calib_dat2wavflac(rawFileName: str,
     return True
 
 
+def calib_real_dat2wavflac(rawFileName: str,
+                           calibFileName: str,
+                           calibParamsFileName: str) -> bool:
+
+    if not os.path.exists(rawFileName):
+        log.error(f'Raw dat file {rawFileName} not found!')
+        raise AssertionError(f"FAILED: the following test data file does not exist: {rawFileName}")
+    if not os.path.exists(calibFileName):
+        log.error(f'Calibration file {calibFileName} not found!')
+        raise AssertionError(f"FAILED: the following test data file does not exist: {calibFileName}")
+    if not os.path.exists(calibParamsFileName):
+        log.error(f'Calibration file {calibParamsFileName} not found!')
+        raise AssertionError(f"FAILED: the following test data file does not exist: {calibParamsFileName}")
+
+    try:
+        binData, numChannels, sampleRate, durationHeader, \
+            startTime, endTime = rawdat.readRawFile(rawFileName)
+    except:
+        raise AssertionError(f"FAILED: read raw DAT file {rawFileName}")
+
+    try:
+        essentialMetadata = audiofile.MetadataEssential(
+            numChannels=numChannels,
+            sampleRate=sampleRate,
+            durationHeader=durationHeader,
+            startTime=startTime,
+            endTime=endTime
+        )
+    except:
+        raise AssertionError(f"FAILED: extract essential metadata from the header of raw DAT file {rawFileName}")
+
+    # debugging...
+    log.debug(f"raw .DAT signal size is: {binData.size}")
+    log.debug(f"raw .DAT signal type is: {type(binData)}")
+    log.debug(f"min bin value in raw .DAT signal size is: {numpy.min(binData)}")
+    log.debug(f"max bin value in raw .DAT signal size is: {numpy.max(binData)}")
+
+    numOverloadedSamples = calibration.countOverload(binData)
+    if numOverloadedSamples > 0:
+        log.warning(f"Logger was overloaded - signal is clipped for {numOverloadedSamples} samples.")
+
+    # read calibration parameters
+    try:
+        calib_params = read_calib_parameters(calibParamsFileName)
+    except:
+        raise AssertionError(f"FAILED: read calibration parameters file {calibParamsFileName}")
+
+    param = 'Cal level'
+    try:
+        cnl = calib_params.get(param)
+    except:
+        raise AssertionError(f"FAILED: extract calibration parameter \'{param}\' from file {calibParamsFileName}")
+
+    param = 'Hydrophone sensitivity'
+    try:
+        hs = calib_params.get(param)
+    except:
+        raise AssertionError(f"FAILED: extract calibration parameter \'{param}\' from file {calibParamsFileName}")
+
+    # read and pre-process calibration audio record
+    try:
+        calSpec, calFreq, calSampleRate = calibration.loadPrepCalibFile(calibFileName, cnl, hs)
+        if sampleRate != calSampleRate:
+            msg = "Sample rate is different between the audio record and calibration file."
+            logging.error(msg)
+            raise AssertionError(msg)
+    except:
+        raise AssertionError(f"FAILED: read and pre-process calibration audio file {calibFileName}")
+
+    # do the calibration
+    try:
+        volts = calibration.toVolts(binData)
+        calibratedSignal = calibration.calibrateReal(volts, cnl, hs, calSpec, calFreq, sampleRate)
+        scaledSignal, scaleFactor = calibration.scale(calibratedSignal)
+
+    except:
+        raise AssertionError(f"FAILED: calibrate and scale audio file {rawFileName}")
+
+    # debugging...
+    log.debug(f"scaled calibrated signal size is: {scaledSignal.size}")
+    log.debug(f"scaled calibrated signal type is: {type(scaledSignal)}")
+    log.debug(f"scaled calibrated signal sample type is: {scaledSignal.dtype}")
+    log.debug(f"scaled calibrated signal sample size is: {scaledSignal.itemsize} bytes")
+
+    if scaledSignal is not None:
+        try:
+            # write calibrated wav file
+            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
+            audiofile.writeMono16bit(wavFileName, sampleRate,
+                                        scaledSignal,
+                                        essentialMetadata)
+            # write calibrated flac file
+            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
+            audiofile.writeMono16bit(wavFileName, sampleRate,
+                                     scaledSignal, essentialMetadata, 'FLAC')
+        except:
+            raise AssertionError(f"FAILED: write wave file {wavFileName}")
+    else:
+        logMsg = "Something went wrong, there is no audio signal data to write to a wav file."
+        log.error(logMsg)
+        raise AssertionError(logMsg)
+
+    return True
+
+
 def compare_wav_files(wav: str, ref: str):
     # Open the first WAV file
     with wave.open(wav, 'rb') as wav_file1:
@@ -230,6 +335,25 @@ def test_calib_dat2wavflac():
     calib_dat2wavflac(dat3, cal3, par3)
 
 
+def test_calib_real_dat2wavflac():
+    dat1 = 'tests/data/Rottnest_3154/502DB01D.DAT'
+    cal1 = 'tests/data/Rottnest_3154/Calib_file/501E9BF5.DAT'
+    par1 = 'tests/data/Rottnest_3154/Calib_file/Calib_data.TXT'
+
+    dat2 = 'tests/data/KI_3501/583E9500.DAT'
+    cal2 = 'tests/data/KI_3501/Calib_file/5809C515.DAT'
+    par2 = 'tests/data/KI_3501/Calib_file/Calib_data.TXT'
+
+    dat3 = 'tests/data/Portland_3092/4F480851.DAT'
+    cal3 = 'tests/data/Portland_3092/Calib_file/4FEACA92.DAT'
+    par3 = 'tests/data/Portland_3092/Calib_file/Calib_data.TXT'
+
+    calib_real_dat2wavflac(dat1, cal1, par1)
+    calib_real_dat2wavflac(dat2, cal2, par2)
+    calib_real_dat2wavflac(dat3, cal3, par3)
+
+
+
 def nest_calib_dat2wav_reference():
     wav1 = 'tests/data/Rottnest_3154/502DB01D.wav'
     ref1 = 'tests/data/Rottnest_3154/reference/502DB01D.wav'
@@ -246,3 +370,4 @@ if __name__ == "__main__":
                         datefmt='%Y-%m-%d %H:%M:%S')
 
     test_calib_dat2wavflac()
+    test_calib_real_dat2wavflac()
