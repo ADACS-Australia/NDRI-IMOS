@@ -462,7 +462,6 @@ def calibrateReal(volts: numpy.ndarray, cnl: float, hs: float,
     log.debug(f"specToInverse.size = {specToInverse.size}")
     calibratedSignal = numpy.fft.irfft(specToInverse)
 
-
     # debugging...
     # print(calibratedSignal[:5])
     # print(calibratedSignal[-5:])
