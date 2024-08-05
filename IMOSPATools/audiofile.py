@@ -23,6 +23,22 @@ class MetadataEssential:
     scaleFactor: int = 1
 
 
+@dataclass
+class MetadataFull:
+    setID: int = 0
+    numChannels: int = 1
+    sampleRate: int = 0
+    durationHeader: int = 0
+    durationFile: int = 0
+    startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    # -90 seems to be the most common value of calibration noise level
+    calibNoiselevel: float = -90.0
+    # -196 seems to be the most common value of hydrophone sensitivity
+    hydrophoneSensitivity: float = -196.0
+    scaleFactor: int = 1
+
+
 def deriveOutputFileName(rawFileName: str, ext: str) -> str:
     """
     Generate the wav filename from raw DAT file
