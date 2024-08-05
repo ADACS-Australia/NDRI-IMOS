@@ -68,7 +68,7 @@ class RAWFileFooter:
     startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     dataValidity: str = "no idea"
-    dataToRAM: bool = 0
+    dataToRAM: bool = False
     dataBlockSize: int = 65536
 
 

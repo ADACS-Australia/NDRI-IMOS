@@ -124,13 +124,13 @@ if __name__ == "__main__":
             if args.output == 'wav':
                 # write calibrated wav file with 'audiofile' package library
                 wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
-                audiofile.writeMono16bit(wavFileName, sampleRate,
-                                         scaledSignal, essentialMetadata, 'WAV')
+                audiofile.writeMono16bit(wavFileName, scaledSignal,
+                                         essentialMetadata, 'WAV')
             elif args.output == 'flac':
                 # write calibrated flac file with 'audiofile' package library
                 wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
-                audiofile.writeMono16bit(wavFileName, sampleRate,
-                                         scaledSignal, essentialMetadata, 'FLAC')
+                audiofile.writeMono16bit(wavFileName, scaledSignal,
+                                         essentialMetadata, 'FLAC')
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)
@@ -150,8 +150,8 @@ if __name__ == "__main__":
                 essentialMetadata.scaleFactor = scaleFactor
                 # write calibrated flac file with 'audiofile' package library
                 wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
-                audiofile.writeMono16bit(wavFileName, sampleRate,
-                                         scaledSignal, essentialMetadata, 'FLAC')
+                audiofile.writeMono16bit(wavFileName, scaledSignal,
+                                         essentialMetadata, 'FLAC')
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)

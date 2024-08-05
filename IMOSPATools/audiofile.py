@@ -17,7 +17,11 @@ class IMOSAcousticAudioFileException(Exception):
 class MetadataEssential:
     numChannels: int = 1
     sampleRate: int = -1
-    durationHeader: int = 0
+    # audio record duration as read from the DAT file header
+    durationHeader: float = 0
+    # actual duration of the audio record as stored in a file
+    # typically little longer than what is in the DAT file header
+    durationFile: float = 0
     startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     scaleFactor: int = -1
@@ -25,11 +29,18 @@ class MetadataEssential:
 
 @dataclass
 class MetadataFull:
-    setID: int = 0
+    # Where we get this SetID? database of records?
+    # it is in some of the DAT file headers, but not in all of them
+    setID: int = -1
+    # schedule number seems to be in many DAT file headers
+    schedule: int = -1
     numChannels: int = 1
     sampleRate: int = 0
-    durationHeader: int = 0
-    durationFile: int = 0
+    # audio record duration as read from the DAT file header
+    durationHeader: float = 0
+    # actual duration of the audio record as stored in a file
+    # typically little longer than what is in the DAT file header
+    durationFile: float = 0
     startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     # -90 seems to be the most common value of calibration noise level
@@ -55,8 +66,9 @@ def deriveOutputFileName(rawFileName: str, ext: str) -> str:
     return outputFileName
 
 
-def writeMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
-                      metadataStruct: MetadataEssential=None, fileFormat='WAV') -> None:
+def writeMono16bit(fileName: str, binData: numpy.ndarray,
+                   metadataStruct: MetadataEssential=None,
+                   fileFormat='WAV') -> None:
     """
     Write audio signal data into a MS wave file
     !@#$%^& TODO use the struct values rather than extra param sampleRate
@@ -74,6 +86,7 @@ def writeMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
         # Micro$oft wave format does not support custom metadata.
         # The workaround is: Format metadata into a json string and
         # write that into wav as a ad sound frame at the end of the file
+        metadataStruct.durationFile = len(binData)/metadataStruct.sampleRate
         metadataDict = asdict(metadataStruct)
         for key, value in metadataDict.items():
             # Convert the value to a string
@@ -90,7 +103,7 @@ def writeMono16bit(fileName: str, sampleRate: float, binData: numpy.ndarray,
         metadataString = "IMOS audio"
 
     try:
-        with soundfile.SoundFile(fileName, mode='w', samplerate=int(sampleRate),
+        with soundfile.SoundFile(fileName, mode='w', samplerate=int(metadataStruct.sampleRate),
                                  channels=1, subtype='PCM_16', format=fileFormat) as sf:
             # __setattr__(self, name, value) is not part of official documented API
             # see https://python-soundfile.readthedocs.io/en/0.11.0/_modules/soundfile.htm
@@ -183,6 +196,7 @@ def extractMetadataStruct(fileName: str) -> MetadataEssential:
             numChannels=int(metadata_dict['numChannels']),
             sampleRate=int(float(metadata_dict['sampleRate'])),
             durationHeader=int(float(metadata_dict['durationHeader'])),
+            durationFile=int(float(metadata_dict['durationFile'])),
             startTime=start_time,
             endTime=end_time,
             scaleFactor=int(float(metadata_dict['scaleFactor']))
