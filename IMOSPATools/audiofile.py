@@ -20,7 +20,7 @@ class MetadataEssential:
     durationHeader: int = 0
     startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
-    scaleFactor: int = 1
+    scaleFactor: int = -1
 
 
 @dataclass
@@ -36,7 +36,7 @@ class MetadataFull:
     calibNoiselevel: float = -90.0
     # -196 seems to be the most common value of hydrophone sensitivity
     hydrophoneSensitivity: float = -196.0
-    scaleFactor: int = 1
+    scaleFactor: int = -1
 
 
 def deriveOutputFileName(rawFileName: str, ext: str) -> str:
