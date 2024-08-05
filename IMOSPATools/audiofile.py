@@ -32,7 +32,7 @@ class MetadataFull:
     # Where we get this SetID? database of records?
     # it is in some of the DAT file headers, but not in all of them
     setID: int = -1
-    # schedule number seems to be in many DAT file headers
+    # schedule number seems to be included in many DAT file headers
     schedule: int = -1
     numChannels: int = 1
     sampleRate: int = 0
@@ -43,10 +43,13 @@ class MetadataFull:
     durationFile: float = 0
     startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    # calibration noise level - as provided for calibration
     # -90 seems to be the most common value of calibration noise level
-    calibNoiselevel: float = -90.0
+    # 0.0 means not calibrated
+    calibNoiselevel: float = 0.0
+    # hydrophone sensitivity - as provided for calibration
     # -196 seems to be the most common value of hydrophone sensitivity
-    hydrophoneSensitivity: float = -196.0
+    hydrophoneSensitivity: float = -196
     scaleFactor: int = -1
 
 
