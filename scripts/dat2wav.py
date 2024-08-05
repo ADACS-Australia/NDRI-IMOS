@@ -22,7 +22,7 @@ def parseArgs():
     parser.add_argument('--filename', '-f', required=True,
                         help='The name of the raw .DAT file to process.')
     parser.add_argument('--output', '-o', type=str,
-                        choices=['wav', 'flac'], default="WAV",
+                        choices=['wav', 'flac'], default="wav",
                         help='Output audio file format (wav, flac)')
     parser.add_argument('--calibrate', '-c', required=False,
                         help='Calibrate, using calibration file')
