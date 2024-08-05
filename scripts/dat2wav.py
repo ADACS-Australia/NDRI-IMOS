@@ -22,8 +22,8 @@ def parseArgs():
     parser.add_argument('--filename', '-f', required=True,
                         help='The name of the raw .DAT file to process.')
     parser.add_argument('--output', '-o', type=str,
-                        choices=['WAV', 'FLAC'], default="WAV",
-                        help='Output audio file format (WAV, FLAC)')
+                        choices=['wav', 'flac'], default="WAV",
+                        help='Output audio file format (wav, flac)')
     parser.add_argument('--calibrate', '-c', required=False,
                         help='Calibrate, using calibration file')
     parser.add_argument('--noise', '-n', type=float,
@@ -64,10 +64,10 @@ if __name__ == "__main__":
             exit(-1)
         if args.noise is None:
             args.noise = -90.0
-            log.warning(f"Calibration noise level not provided, usjing default {args.noise}")
+            log.warning(f"Calibration noise level not provided, using default {args.noise}")
         if args.sensitivity is None:
             args.sensitivity = -196.0
-            log.warning(f"Hydrophone sensitivity not provided, usjing default {args.sensitivity}")
+            log.warning(f"Hydrophone sensitivity not provided, using default {args.sensitivity}")
 
         if args.intermediate:
             # calibration.doWriteIntermediateResults is initialised \
@@ -121,19 +121,16 @@ if __name__ == "__main__":
                 scaledSignalInt16 = wav.scaleSignalFloatTo16bitPCM(scaledSignal)
                 numpy.savetxt('signal_scaled.txt', scaledSignalInt16)
 
-            if args.output == 'WAV':
+            if args.output == 'wav':
                 # write calibrated wav file with 'audiofile' package library
                 wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
                 audiofile.writeMono16bit(wavFileName, sampleRate,
                                          scaledSignal, essentialMetadata, 'WAV')
-            elif args.output == 'FLAC':
+            elif args.output == 'flac':
                 # write calibrated flac file with 'audiofile' package library
                 wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
                 audiofile.writeMono16bit(wavFileName, sampleRate,
                                          scaledSignal, essentialMetadata, 'FLAC')
-            else:
-                logMsg = "Something went wrong, there is no audio signal data to write to wav file."
-                log.error(logMsg)
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)
@@ -143,11 +140,18 @@ if __name__ == "__main__":
             # need to convert uint16 to int16
             # Steps: convert to volts, normalise and scale back to signed int16
             volts = calibration.toVolts(binData)
-            scaledSignalInt16 = wav.scaleSignalFloatTo16bitPCM(volts)
-
-            # write normalised scaled but still raw uncalibrated data into a wav file
-            wavFileName = wav.deriveWavFileName(rawFileName)
-            wav.writeMono16bit(wavFileName, sampleRate, scaledSignalInt16)
+            scaledSignal, scaleFactor = calibration.scale(volts)
+            if args.output == 'wav':
+                scaledSignalInt16 = wav.scaleSignalFloatTo16bitPCM(scaledSignal)
+                # write normalised scaled but still raw uncalibrated data into a wav file
+                wavFileName = wav.deriveWavFileName(rawFileName)
+                wav.writeMono16bit(wavFileName, sampleRate, scaledSignalInt16)
+            elif args.output == 'flac':
+                essentialMetadata.scaleFactor = scaleFactor
+                # write calibrated flac file with 'audiofile' package library
+                wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
+                audiofile.writeMono16bit(wavFileName, sampleRate,
+                                         scaledSignal, essentialMetadata, 'FLAC')
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)
