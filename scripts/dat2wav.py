@@ -21,14 +21,19 @@ def parseArgs():
                         help='Enable debug mode')
     parser.add_argument('--filename', '-f', required=True,
                         help='The name of the raw .DAT file to process.')
+    parser.add_argument('--output', '-o', type=str,
+                        choices=['WAV', 'FLAC'], default="WAV",
+                        help='Output audio file format (WAV, FLAC)')
     parser.add_argument('--calibrate', '-c', required=False,
                         help='Calibrate, using calibration file')
-    parser.add_argument('--noise', '-n', required=False, 
+    parser.add_argument('--noise', '-n', type=float,
+                        required=False,
                         help='Calibration noise level (cnl)')
-    parser.add_argument('--sensitivity', '-s', required=False,
+    parser.add_argument('--sensitivity', '-s', type=float,
+                        required=False,
                         help='Hydrophone sensitivity (hs)')
     parser.add_argument('--intermediate', '-i', action='store_true',
-                        help='write intermediate results as csv')
+                        help='Write intermediate results as single column text file')
     args = parser.parse_args()
     return args
 
@@ -59,8 +64,10 @@ if __name__ == "__main__":
             exit(-1)
         if args.noise is None:
             args.noise = -90.0
+            log.warning(f"Calibration noise level not provided, usjing default {args.noise}")
         if args.sensitivity is None:
-            args.sensitivity = -197.8
+            args.sensitivity = -196.0
+            log.warning(f"Hydrophone sensitivity not provided, usjing default {args.sensitivity}")
 
         if args.intermediate:
             # calibration.doWriteIntermediateResults is initialised \
@@ -110,22 +117,23 @@ if __name__ == "__main__":
         log.debug(f"scaled calibrated signal sample size is: {scaledSignal.itemsize} bytes")
 
         if scaledSignal is not None:
-            # write calibrated wav file with 'wave' package library
-            wavFileName = wav.deriveWavFileName('_' + rawFileName)
-            scaledSignalInt16 = wav.scaleSignalFloatTo16bitPCM(scaledSignal)
             if args.intermediate:
+                scaledSignalInt16 = wav.scaleSignalFloatTo16bitPCM(scaledSignal)
                 numpy.savetxt('signal_scaled.txt', scaledSignalInt16)
-            wav.writeMono16bit(wavFileName, sampleRate,
-                               scaledSignalInt16)
 
-            # write calibrated wav file with 'audiofile' package library
-            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
-            audiofile.writeMono16bit(wavFileName, sampleRate,
-                                     scaledSignal, essentialMetadata, 'WAV')
-            # write calibrated flac file with 'audiofile' package library
-            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
-            audiofile.writeMono16bit(wavFileName, sampleRate,
-                                     scaledSignal, essentialMetadata, 'FLAC')
+            if args.output == 'WAV':
+                # write calibrated wav file with 'audiofile' package library
+                wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
+                audiofile.writeMono16bit(wavFileName, sampleRate,
+                                         scaledSignal, essentialMetadata, 'WAV')
+            elif args.output == 'FLAC':
+                # write calibrated flac file with 'audiofile' package library
+                wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
+                audiofile.writeMono16bit(wavFileName, sampleRate,
+                                         scaledSignal, essentialMetadata, 'FLAC')
+            else:
+                logMsg = "Something went wrong, there is no audio signal data to write to wav file."
+                log.error(logMsg)
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)
