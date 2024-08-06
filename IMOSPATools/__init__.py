@@ -17,5 +17,5 @@ https://adacs.org.au
 """
 __author__ = 'Martin Cupak'
 __email__ = 'martin.cupak@curtin.edu.au'
-__version__ = '0.4'
-__date__ = '2024-07-29'
+__version__ = '0.5'
+__date__ = '2024-08-06'
