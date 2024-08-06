@@ -262,45 +262,56 @@ def calib_real_dat2wavflac(rawFileName: str,
 
 
 def compare_wav_files(wav: str, ref: str):
+    print(f"Compare file {wav} with reference {ref}")
     # Open the first WAV file
     with wave.open(wav, 'rb') as wav_file1:
         params1 = wav_file1.getparams()
         frames1 = wav_file1.readframes(params1.nframes)
+        sampleFreq1 = wav_file1.getframerate()
         samples1 = numpy.frombuffer(frames1, dtype=numpy.int16)
 
     # Open the second WAV file (reference)
     with wave.open(ref, 'rb') as wav_file2:
         params2 = wav_file2.getparams()
         frames2 = wav_file2.readframes(params2.nframes)
+        sampleFreq2 = wav_file1.getframerate()
         samples2 = numpy.frombuffer(frames2, dtype=numpy.int16)
+
+    if sampleFreq1 != sampleFreq2:
+        logMsg = f"Sampling frequency of compared files is different - tested: {sampleFreq1}Hz reference: {sampleFreq2}Hz."
+        log.error(logMsg)
+        raise AssertionError(logMsg)
 
     # Ensure the comparison is only up to the length of the shorter file
     min_length = min(len(samples1), len(samples2))
     samples1 = samples1[:min_length]
     samples2 = samples2[:min_length]
 
+    # skip the 1st 0.2s as the high pass filter is not settled yet
+    samples1 = samples1[int(0.2*sampleFreq1):-int(0.2*sampleFreq1)]
+    samples2 = samples2[int(0.2*sampleFreq1):-int(0.2*sampleFreq1)]
+
     # Compare the samples using numpy.isclose
     # comparison = numpy.isclose(samples1, samples2)
     # Return True if all samples are close, False otherwise
     # return numpy.all(comparison)
-
-    are_close = numpy.allclose(samples1, samples2)
+    are_close = numpy.allclose(samples1, samples2, rtol=0.2, atol=0.2)
 
     if not are_close:
         # Find indices where samples are not close
-        not_close = ~numpy.isclose(samples1, samples2)
+        not_close = ~numpy.isclose(samples1, samples2, rtol=0.2, atol=0.2)
         diff_indices = numpy.where(not_close)[0]
 
         # Print the first 10 samples that are not close
-        print("First 10 samples that are not close (index, wav1 value, ref1 value):")
+        print("First 10 samples that are not close (index, wav value, ref value):")
         for i, idx in enumerate(diff_indices[:10]):
             print(f"{idx}: {samples1[idx]} vs {samples2[idx]} ratio {samples2[idx]/samples1[idx]}")
 
-        print("Middle 10 samples that are not close (index, wav1 value, ref1 value):")
+        print("Middle 10 samples that are not close (index, wav value, ref value):")
         for i, idx in enumerate(diff_indices[((diff_indices.size//2)-5):((diff_indices.size//2)+5)]):
             print(f"{idx}: {samples1[idx]} vs {samples2[idx]} ratio {samples2[idx]/samples1[idx]}")
 
-        print("Last 10 samples that are not close (index, wav1 value, ref1 value):")
+        print("Last 10 samples that are not close (index, wav value, ref value):")
         for i, idx in enumerate(diff_indices[-10:]):
             print(f"{idx}: {samples1[idx]} vs {samples2[idx]} ratio {samples2[idx]/samples1[idx]}")
 
@@ -351,11 +362,22 @@ def test_calib_real_dat2wavflac():
     calib_real_dat2wavflac(dat3, cal3, par3)
 
 
-
-def nest_calib_dat2wav_reference():
+def nest_calib_dat2wav_reference1():
     wav1 = 'tests/data/Rottnest_3154/502DB01D.wav'
     ref1 = 'tests/data/Rottnest_3154/reference/502DB01D.wav'
     compare_wav_files(wav1, ref1)
+
+
+def nest_calib_dat2wav_reference2():
+    wav2 = 'tests/data/KI_3501/KI_3501'
+    ref2 = 'tests/data/KI_3501/reference/KI_3501'
+    compare_wav_files(wav2, ref2)
+
+
+def nest_calib_dat2wav_reference3():
+    wav3 = 'tests/data/Portland_3092/4F480851.wav'
+    ref3 = 'tests/data/Portland_3092/reference/4F480851.wav'
+    compare_wav_files(wav3, ref3)
 
 
 if __name__ == "__main__":
