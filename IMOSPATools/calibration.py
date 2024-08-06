@@ -251,9 +251,24 @@ def calibrate(volts: numpy.ndarray, cnl: float, hs: float,
 
     # Make high-pass filter to remove slow varying DC offset
     # 5th order Butterworth filter with a critical frequency 10/sampling rate
-    b, a = scipy.signal.butter(5, 5/fSample*2, btype='high', output='ba')
+
+    # MCu Note: according to SciPy documentation, and other public information,
+    # SciPy bandpass filters designed with b, a are unstable and may result
+    # in erroneous filters at higher filter orders.
+    # It is better use sos (second-order sections) output of filter design.
+
+    #   b, a = scipy.signal.butter(5, 5/fSample*2, btype='high', output='ba')
+    sos = scipy.signal.butter(5, 5/fSample*2, btype='high', output='sos')
     # apply the filter on the input signal
-    signal = scipy.signal.lfilter(b, a, volts)
+    #   signal = scipy.signal.lfilter(b, a, volts)
+    #   signal = scipy.signal.sosfilt(sos, volts)
+    # Both ba and regular sos filters result in frequency dependant phase shift.
+    # The phase delay can be eliminated by using forward-backward filtering,
+    # in case of non-realtim processing.
+    # Just replace sosfilt() with sosfiltfilt()
+    signal = scipy.signal.sosfiltfilt(sos, volts)
+    # However, the first about 100 milliseconds of the forward-backward
+    # filtered signal have a bit of DC offset artifact
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_filtered.txt', signal, fmt='%.5f')
@@ -398,9 +413,24 @@ def calibrateReal(volts: numpy.ndarray, cnl: float, hs: float,
 
     # Make high-pass filter to remove slow varying DC offset
     # 5th order Butterworth filter with a critical frequency 10/sampling rate
-    b, a = scipy.signal.butter(5, 5/fSample*2, btype='high', output='ba')
+
+    # MCu Note: according to SciPy documentation, and other public information,
+    # SciPy bandpass filters designed with b, a are unstable and may result
+    # in erroneous filters at higher filter orders.
+    # It is better use sos (second-order sections) output of filter design.
+
+    #   b, a = scipy.signal.butter(5, 5/fSample*2, btype='high', output='ba')
+    sos = scipy.signal.butter(5, 5/fSample*2, btype='high', output='sos')
     # apply the filter on the input signal
-    signal = scipy.signal.lfilter(b, a, volts)
+    #   signal = scipy.signal.lfilter(b, a, volts)
+    #   signal = scipy.signal.sosfilt(sos, volts)
+    # Both ba and regular sos filters result in frequency dependant phase shift.
+    # The phase delay can be eliminated by using forward-backward filtering,
+    # in case of non-realtim processing.
+    # Just replace sosfilt() with sosfiltfilt()
+    signal = scipy.signal.sosfiltfilt(sos, volts)
+    # However, the first about 100 milliseconds of the forward-backward
+    # filtered signal have a bit of DC offset artifact
 
     if doWriteIntermediateResults:
         numpy.savetxt('signal_filtered.txt', signal, fmt='%.5f')
