@@ -15,25 +15,25 @@ Repository structure
    .. code-block::
   
       NDRI-IMOS
-      ├── doc
-      ├── IMOSPATools
-      ├── jupyter
-      ├── scripts
+      ├── doc          ... *documentation*
+      ├── IMOSPATools  ... the python library code
+      ├── jupyter      ... Jupyter notebooks to compare results with reference
+      ├── scripts      ... CLI tools
       ├── src
-      │   ├── matlab
+      │   ├── matlab   ... the regerence matlab implementation of calibration
       │   └── utils
-      │       └── imos_read
-      └── tests
-         ├── data
-         │   ├── KI_3501
-         │   │   ├── Calib_file
-         │   │   └── reference
-         │   ├── Portland_3092
-         │   │   ├── Calib_file
-         │   │   └── reference
-         │   └── Rottnest_3154
-         │       ├── Calib_file
-         │       └── reference
+      │       └── imos_read  ... simple C code to read .DAT file
+      └── tests        ... test procedures
+         └── data      ... test data
+               ├── KI_3501
+               │   ├── Calib_file
+               │   └── reference
+               ├── Portland_3092
+               │   ├── Calib_file
+               │   └── reference
+               └── Rottnest_3154
+                   ├── Calib_file
+                   └── reference
          
    .. ::
 
