@@ -13,6 +13,7 @@ calibration.doWriteIntermediateResults = False
 
 
 def read_calib_parameters(file_path):
+    # helper function to read calibration parameters from a plaintext file
     parameters = {}
 
     with open(file_path, 'r') as file:
@@ -38,6 +39,8 @@ def read_calib_parameters(file_path):
 
 
 def load_float_array(file_path):
+    # helper function to read audio signal intermediate product 
+    # in text format, one float number per line
     try:
         # Load the file using numpy's loadtxt function
         # We set dtype to float to ensure all values are treated as floats
@@ -56,6 +59,7 @@ def load_float_array(file_path):
 def calib_dat2wavflac(rawFileName: str,
                       calibFileName: str,
                       calibParamsFileName: str) -> bool:
+    # test calibration of one file using regular (complex) FFT/IFFT
 
     if not os.path.exists(rawFileName):
         log.error(f'Raw dat file {rawFileName} not found!')
@@ -160,6 +164,7 @@ def calib_dat2wavflac(rawFileName: str,
 def calib_real_dat2wavflac(rawFileName: str,
                            calibFileName: str,
                            calibParamsFileName: str) -> bool:
+    # test calibration of one file using real FFT/IFFT
 
     if not os.path.exists(rawFileName):
         log.error(f'Raw dat file {rawFileName} not found!')
@@ -262,6 +267,14 @@ def calib_real_dat2wavflac(rawFileName: str,
 
 
 def compare_wav_files(wav: str, ref: str):
+    # Turned out this is not actually realistic to do, for two reasons:
+    # 1) the phase delay correction for the high pass Butterworth
+    # filter produces slightly different result using Python SciPy
+    # compared to Matlab implementation.
+    # 2) the Matlab wav write function scales the normalised audio
+    # signal (in floats) to signed int16 differently compared to Ptyhon 
+    # soundfile package, and in both libs it is done automaticaly,
+    # there is no parameter to modify that scaling factor.
     print(f"Compare file {wav} with reference {ref}")
     # Open the first WAV file
     with wave.open(wav, 'rb') as wav_file1:
@@ -287,7 +300,7 @@ def compare_wav_files(wav: str, ref: str):
     samples1 = samples1[:min_length]
     samples2 = samples2[:min_length]
 
-    # skip the 1st 0.2s as the high pass filter is not settled yet
+    # Skip the 1st 0.2s as the high pass filter is not settled yet
     samples1 = samples1[int(0.2*sampleFreq1):-int(0.2*sampleFreq1)]
     samples2 = samples2[int(0.2*sampleFreq1):-int(0.2*sampleFreq1)]
 
@@ -322,11 +335,8 @@ def compare_wav_files(wav: str, ref: str):
     return are_close
 
 
-def compare_normalised_calib_signal():
-    return True
-
-
 def test_calib_dat2wavflac():
+    # test calibration that uses regular (copmplex) FFT/IFFT
     dat1 = 'tests/data/Rottnest_3154/502DB01D.DAT'
     cal1 = 'tests/data/Rottnest_3154/Calib_file/501E9BF5.DAT'
     par1 = 'tests/data/Rottnest_3154/Calib_file/Calib_data.TXT'
@@ -345,6 +355,7 @@ def test_calib_dat2wavflac():
 
 
 def test_calib_real_dat2wavflac():
+    # test calibration that uses real FFT/IFFT
     dat1 = 'tests/data/Rottnest_3154/502DB01D.DAT'
     cal1 = 'tests/data/Rottnest_3154/Calib_file/501E9BF5.DAT'
     par1 = 'tests/data/Rottnest_3154/Calib_file/Calib_data.TXT'
@@ -361,6 +372,9 @@ def test_calib_real_dat2wavflac():
     calib_real_dat2wavflac(dat2, cal2, par2)
     calib_real_dat2wavflac(dat3, cal3, par3)
 
+
+# The following 3 functions are renamed test* -> nest*
+# to avoid pytest running them automatically
 
 def nest_calib_dat2wav_reference1():
     wav1 = 'tests/data/Rottnest_3154/502DB01D.wav'
