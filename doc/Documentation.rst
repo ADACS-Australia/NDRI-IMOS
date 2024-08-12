@@ -1,0 +1,55 @@
+======================
+IMOS PA Tools
+======================
+
+IMOS Passive Audio Tools Documentation
+-----------------------------------------------------------------
+
+This software contains of a Python library package IMOAPATools and a set of CLI tools that serve also as a demo code how to use the library.
+
+It is recommended to install the package with pip in a virtual environment (eg miniconda), or in a container.
+
+Repository structure
+--------------------
+  
+   .. code-block::
+  
+      NDRI-IMOS
+      ├── doc
+      ├── IMOSPATools
+      ├── jupyter
+      ├── scripts
+      ├── src
+      │   ├── matlab
+      │   └── utils
+      │       └── imos_read
+      └── tests
+         ├── data
+         │   ├── KI_3501
+         │   │   ├── Calib_file
+         │   │   └── reference
+         │   ├── Portland_3092
+         │   │   ├── Calib_file
+         │   │   └── reference
+         │   └── Rottnest_3154
+         │       ├── Calib_file
+         │       └── reference
+         
+   .. ::
+
+Static design
+-------------
+
+.. image:: doc/IMOSPATools_static_design.svg
+   :alt: Static library design
+
+Dynamic design
+--------------
+
+.. image:: doc/calibration_dataflow.svg
+   :alt: Static library design
+
+CLI tools included
+------------------
+
+Commandline tools 
