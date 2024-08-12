@@ -17,7 +17,7 @@ Repository structure
       NDRI-IMOS
       ├── doc          ... documentation
       ├── IMOSPATools  ... the python library code
-      ├── jupyter      ... Jupyter notebooks to compare results with reference
+      ├── jupyter      ... Jupyter notebooks to compare calibration result with reference implementation
       ├── scripts      ... CLI tools
       ├── src
       │   ├── matlab   ... the reference matlab implementation of calibration
@@ -60,10 +60,23 @@ CLI tools included
 Commandline tools 
 
 * dat2wav.py ... commandline script that is able to read one raw (.DAT) file,
-                 calibrate it and save the product as Microsoft wave or flac file
+                 calibrate it and save the product to a file as Microsoft WAVE
+                 or loselessly compressed FLAC
 
 * inspect_audio_record.py ... commandline script that read the vane or flac file 
-                              and prints various information on the data recordd,
+                              and prints various information on the data recorrd,
                               including IMOS meta data (if included in the file).
    
+Testing
+-------
+Automated end-to-end integration test using pytest is included in the github repo.
+All test* functions in code modules matching pattern test*.py in sub-folder 'tests' 
+are automatically executed in Python 3.8.latest and 3.9.latest on Github when 
+git push or pull request actions are taken.
 
+Verification
+------------
+Jupyter notebooks calling IMOAPATools library combined with code copied from the library 
+calibration module are used to verify the correctness of the calibration, compared 
+to the product of the reference implementation. The comparison is done at the stage 
+of normalised calibrated signal.
