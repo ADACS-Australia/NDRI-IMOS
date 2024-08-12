@@ -37,7 +37,7 @@ The IMOS passive audio tools library is wrapped in a python package named IMOSPA
       python3 -m pip -v uninstall IMOSPATools
       python3 -m pip -v cache purge
 
-#. Makefile
+   Optional: Makefile
 
    There is also a simple `Makefile <Makefile>`_ that is capable of the generic make functionality:
 
@@ -49,7 +49,7 @@ The IMOS passive audio tools library is wrapped in a python package named IMOSPA
 
    .. ::
 
-#.Usage
+#. Usage
 
    To use the functions from the package, just import the module and call the functions:
    
