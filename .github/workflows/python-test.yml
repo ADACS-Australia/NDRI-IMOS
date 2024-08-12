@@ -32,17 +32,15 @@ jobs:
       fail-fast: false
       matrix:
 #        python-version: ["3.8", "3.9", "3.10", "3.11"]
-# as of 7/2024, scipy does not support python 3.10+!
-#         python-version: ["3.8", "3.9"]
-        python-version: ["3.9"]
+# as of 7/2024, scipy does not support python 3.10+ yet!
+        python-version: ["3.8", "3.9"]
+#        python-version: ["3.9"]
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-#    - name: Set up Python "3.10"
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-#        python-version: "3.10"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
