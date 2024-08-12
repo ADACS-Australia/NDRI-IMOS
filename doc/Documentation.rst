@@ -40,13 +40,13 @@ Repository structure
 Static design
 -------------
 
-.. image:: doc/IMOSPATools_static_design.svg
+.. image:: IMOSPATools_static_design.svg
    :alt: Static library design
 
 Dynamic design
 --------------
 
-.. image:: doc/calibration_dataflow.svg
+.. image:: calibration_dataflow.svg
    :alt: Static library design
 
 CLI tools included
