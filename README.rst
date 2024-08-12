@@ -14,11 +14,11 @@ Features
 --------
 
 Python module for IMOS passive audio recordings. Supports following functionality:
-- read raw (.DAT) format files
-- calibration 
-- write in uncompressed Micro$oft wave (.WAV) and compressed flac (.FLAC) audio formats
-- the metadata is stored as json string in the "comment" ID3 tag.
-- the library provides functions to extract the metadata
+* read raw (.DAT) format files
+* calibration 
+* write in uncompressed Micro$oft wave (.WAV) and compressed flac (.FLAC) audio formats
+* the metadata is stored as json string in the "comment" ID3 tag.
+* the library provides functions to extract the metadata
 
 Credits
 -------
