@@ -5,6 +5,8 @@ IMOSPATools
 Build and installation from this github repository
 --------------------------------------------------
 
+The IMOS passive audio tools library is wrapped in a python package named IMOSPATools.
+
 #. Install/upgrade pip, build and local install
 
    .. code-block::
@@ -39,6 +41,10 @@ Build and installation from this github repository
       make install
       make clean
 
+   .. ::
+
+   To use the functions from the package, just import the module and call the functions:
+   
    .. code-block::
 
       from IMOSPATools import ...
