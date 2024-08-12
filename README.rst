@@ -14,9 +14,12 @@ Features
 --------
 
 Python module for IMOS passive audio recordings. Supports following functionality:
-- read raw (.DAT) format files
-- calibration 
-- write as microsoft wave (.WAV)
+
+ - read raw (.DAT) format files
+ - calibration 
+ - write in uncompressed Micro$oft wave (.WAV) and compressed flac (.FLAC) audio formats
+ - the metadata is stored as json string in the "comment" ID3 tag.
+ - the library provides functions to extract the metadata
 
 Credits
 -------
@@ -27,22 +30,20 @@ Based on matlab code modules of CHORUS software by Alexander N. Gavrilov.
 
 `URI <http://hdl.handle.net/20.500.11937/38736>`_
 
-.. Package installation and usage
-.. ------------------------------
-.. BEANSp is on pyPI (https://pypi.org/project/IMOSPATools/) so installation is easy - either straight or in virtual environment:
-.. 
-..    .. code-block::
-..    
-..       pip install IMOSPATools
-..   
-..    .. ::
-..    
-..    .. code-block::
-..    
-..       from IMOSPATools import ...
+Documentation
+-------------
+
+.. image:: /IMOSPATools_static_design.svg
+   :alt: Static library design
 
 
 Build and installation from this github repository
 --------------------------------------------------
 
+The IMOS passive audio tools library is wrapped in a python package named IMOSPATools.
+
 `Build instructions <BUILD.rst>`_
+
+CLI tools included
+------------------
+
