@@ -20,7 +20,7 @@ Repository structure
       ├── jupyter      ... Jupyter notebooks to compare results with reference
       ├── scripts      ... CLI tools
       ├── src
-      │   ├── matlab   ... the regerence matlab implementation of calibration
+      │   ├── matlab   ... the reference matlab implementation of calibration
       │   └── utils
       │       └── imos_read  ... simple C code to read .DAT file
       └── tests        ... test procedures
@@ -40,16 +40,30 @@ Repository structure
 Static design
 -------------
 
+The static design diagram shows the breakdown of the library into code modules.
+
 .. image:: IMOSPATools_static_design.svg
    :alt: Static library design
 
 Dynamic design
 --------------
 
+The calibration dataflow diagram shows processing steps and intermediate 
+data products through the procedure of calibration.
+
 .. image:: calibration_dataflow.svg
-   :alt: Static library design
+   :alt: Calibration dataflow diagram
 
 CLI tools included
 ------------------
 
 Commandline tools 
+
+* dat2wav.py ... commandline script that is able to read one raw (.DAT) file,
+                 calibrate it and save the product as Microsoft wave or flac file
+
+* inspect_audio_record.py ... commandline script that read the vane or flac file 
+                              and prints various information on the data recordd,
+                              including IMOS meta data (if included in the file).
+   
+
