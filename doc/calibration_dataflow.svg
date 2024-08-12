@@ -12,9 +12,9 @@
    version="1.1"
    id="svg166"
    xml:space="preserve"
-   width="561.24066"
-   height="396.53134"
-   viewBox="0 0 1122.4813 793.06267"
+   width="1870.8021"
+   height="1322.4711"
+   viewBox="0 0 1122.4813 793.48265"
    sodipodi:docname="calibration_dataflow.svg"
    inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"><metadata
      id="metadata172"><rdf:RDF><cc:Work
@@ -45,7 +45,7 @@
      fit-margin-bottom="0"
      inkscape:zoom="1.6820162"
      inkscape:cx="498.9323"
-     inkscape:cy="226.96832"
+     inkscape:cy="1059.3028"
      inkscape:window-x="2667"
      inkscape:window-y="77"
      inkscape:window-maximized="0"
@@ -53,7 +53,7 @@
      id="g174"
      inkscape:groupmode="layer"
      inkscape:label="calibration_dataflow"
-     transform="matrix(1.3333333,0,0,-1.3333333,0,793.09998)"><g
+     transform="matrix(1.3333333,0,0,-1.3333333,0,793.51998)"><g
        id="g176"><g
          id="g178"
          clip-path="url(#clipPath182)"><path
