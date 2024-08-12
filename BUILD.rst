@@ -31,9 +31,10 @@ Build and installation from this github repository
       python3 -m pip -v uninstall IMOSPATools
       python3 -m pip -v cache purge
 
-   There is also a simple makefile that is capable of the generic functionality:
+   There is also a simple :Makefile:`Link text <Makefile>` that is capable of the generic make functionality:
 
    .. code-block::
+
       make 
       make install
       make clean
