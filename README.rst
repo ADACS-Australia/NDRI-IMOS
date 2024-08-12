@@ -33,7 +33,7 @@ Based on matlab code modules of CHORUS software by Alexander N. Gavrilov.
 Documentation
 -------------
 
-.. image:: /IMOSPATools_static_design.svg
+.. image:: doc/IMOSPATools_static_design.svg
    :alt: Static library design
 
 
