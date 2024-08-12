@@ -45,6 +45,17 @@ The static design diagram shows the breakdown of the library into code modules.
 .. image:: IMOSPATools_static_design.svg
    :alt: Static library design
 
+* rawdat ... routines to read the raw (.DAT) files.
+* calibration ... routines to read and pre-process the calibration file, 
+                  and to calibrate the actual audio records.
+* audiofile ... routines to write audio record (output of the calibration) into 
+                a file in WAV or FLAC format. Definition of structures for IMOS 
+                specific meta data. Handling and conversions of metadata format.
+                This code is based on "soundfile' package.
+* wav ... simple module to write MS WAVE files (uses python package 'wave'),
+          does not support IMOS specific metadata handling.
+
+
 Dynamic design
 --------------
 
