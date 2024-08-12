@@ -16,7 +16,7 @@ Repository structure
   
       NDRI-IMOS
       ├── doc          ... documentation
-      ├── IMOSPATools  ... the python library code
+      ├── IMOSPATools  ... the Python library code
       ├── jupyter      ... Jupyter notebooks to compare calibration result with reference implementation
       ├── scripts      ... CLI tools
       ├── src
@@ -80,3 +80,23 @@ Jupyter notebooks calling IMOAPATools library combined with code copied from the
 calibration module are used to verify the correctness of the calibration, compared 
 to the product of the reference implementation. The comparison is done at the stage 
 of normalised calibrated signal.
+
+Technical notes
+----------------
+
+The code is based on commonly used Python libraries included in packages numpy and scipy. 
+Scipy as of 07/2024 does not support Python versions later than 3.9 and this fact
+restricts the usavilit of this code to the same Python version.
+
+The Butterworth high pass filter introduces frequency dependant phase delay. This is 
+compensated by using forward-backward filtering, as this calibration is post-processing,
+rather than being done in real-time. In the scipy implementation, the initial approx 0.1s
+at the beginning of the calibrated audio record has a bit of artefact visible when 
+inspecting the waveform, which is not present in the matlab implementation. After 
+appox 0.2 s this fades out completely and is not noticeable.
+
+The fast fourier transformation eventually used in the code is "real signal" FFT, which
+ensures that no numerical residuals of complex component need to be explicitly removed 
+from the product of inverse FFT.
+
+
