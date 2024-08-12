@@ -15,7 +15,7 @@ Repository structure
    .. code-block::
   
       NDRI-IMOS
-      ├── doc          ... *documentation*
+      ├── doc          ... documentation
       ├── IMOSPATools  ... the python library code
       ├── jupyter      ... Jupyter notebooks to compare results with reference
       ├── scripts      ... CLI tools
