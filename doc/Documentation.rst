@@ -79,7 +79,7 @@ Commandline tools
     or loselessly compressed FLAC
 
 * inspect_audio_record.py
-    commandline script that read the vane or flac file 
+    commandline script that read the wav or flac file 
     and prints various information on the data recorrd,
     including IMOS meta data (if included in the file).
    
