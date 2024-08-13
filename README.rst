@@ -45,3 +45,14 @@ The IMOS passive audio tools library is wrapped in a python package named IMOSPA
 CLI tools included
 ------------------
 
+Commandline tools 
+
+* dat2wav.py 
+    commandline script that is able to read one raw (.DAT) file,
+    calibrate it and save the product to a file as Microsoft WAVE
+    or loselessly compressed FLAC
+
+* inspect_audio_record.py
+    commandline script that read the vane or flac file 
+    and prints various information on the data recorrd,
+    including IMOS meta data (if included in the file).
