@@ -12,11 +12,13 @@
             "program": "dat2wav.py",
             "args": [
                 "--debug",
-                "-f",
+                "-i",
                 "502DB01D.DAT",
                 "-c",
-                "501E9BF5.DAT"
-                // "-i"
+                "501E9BF5.DAT",
+                "-g",
+                "--setID",
+                "1234"
             ],
             "console": "integratedTerminal",
             "cwd": "${fileDirname}"
@@ -30,9 +32,8 @@
             "program": "dat2wav.py",
             "args": [
                 "--debug",
-                "-f",
-                "502DB01D.DAT",
-                // "-i"
+                "-i",
+                "502DB01D.DAT"
             ],
             "console": "integratedTerminal",
             "cwd": "${fileDirname}"
