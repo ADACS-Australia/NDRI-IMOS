@@ -33,7 +33,7 @@ class MetadataFull:
     # it is in some of the DAT file headers, but not in all of them
     setID: int = -1
     # schedule number seems to be included in many DAT file headers
-    schedule: int = -1
+    schedule: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     numChannels: int = 1
     sampleRate: int = 0
     # audio record duration as read from the DAT file header
@@ -55,9 +55,12 @@ class MetadataFull:
 
 def deriveOutputFileName(rawFileName: str, ext: str) -> str:
     """
-    Generate the wav filename from raw DAT file
+    Derive the output audio filename from raw DAT file 
+        - just replace the extension
 
-    :param rawFileName: filename of the raw (DAT) file from which the vav filename shall be derived
+    :param rawFileName: filename of the raw (DAT) file from which 
+                        the output filename shall be derived
+    :param ext: output audio filename extension
     :return: filename of the wav file name
     """
     # Generate the new filename with the .wav suffix
@@ -66,6 +69,21 @@ def deriveOutputFileName(rawFileName: str, ext: str) -> str:
     else:
         outputFileName = rawFileName + '.' + ext
 
+    return outputFileName
+
+
+def createOutputFileName(setID: int, startTime: datetime, ext: str) -> str:
+    """
+    Create output file name from metadata (data set ID, capture start time)
+
+    :param setID: data set ID
+    :param startTime: audio record capture start time
+    :param ext: output audio filename extension
+    :return: filename of the wav file name
+    """
+    # Format the datetime object to a string as in the original Matlab code
+    formattedTimeString = startTime.strftime('%Y%m%d_%H%M%S')
+    outputFileName = f"Set{setID}_{formattedTimeString}.{ext}"
     return outputFileName
 
 
