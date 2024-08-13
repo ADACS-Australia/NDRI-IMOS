@@ -6,8 +6,8 @@ IMOS Passive Audio Tools
 -----------------------------------------------------------------
 
 * Free software: XXX License
-* Documentation: 
-* Repo: 
+* Documentation: `https://github.com/ADACS-Australia/NDRI-IMOS/blob/master/doc/Documentation.rst <https://github.com/ADACS-Australia/NDRI-IMOS/blob/master/doc/Documentation.rst>`_
+* Repo: `https://github.com/ADACS-Australia/NDRI-IMOS <https://github.com/ADACS-Australia/NDRI-IMOS>`_
 
 
 Features
