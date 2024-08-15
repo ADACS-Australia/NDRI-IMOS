@@ -7,6 +7,25 @@
 
 #include "imos_read.h"
 
+void swapBytes(U16* data, const size_t count)
+{
+    U16 value;
+    for (size_t i = 0; i < count; i++)
+    {
+        value = data[i];
+        data[i] = (value >> 8) | (value << 8);
+    }
+}
+
+void convertU16ToI16(const U16* input, I16* output, const size_t count)
+{
+    for (size_t i = 0; i < count; i++)
+    {
+        // Convert U16 to I16 by subtracting the midpoint
+        output[i] = (I16)((I32)(input[i]) - (1 << (16 - 1)));
+    }
+}
+
 /*
     Read (only) the header IMOS .dat sound record file
 
@@ -61,7 +80,7 @@ int imos_rawDatReadAll(const char* fileName,
     unsigned int *samplesInFile,
     char** header,
     char** footer,
-    I16* data)
+    U16* data)
 {
     FILE *file = fopen(fileName, "r");
     if (file == NULL) {
@@ -91,7 +110,6 @@ int imos_rawDatReadAll(const char* fileName,
 
     printf("samplesInFile = %d\n", *samplesInFile);
 
-    
     size_t samplesRead = fread(data, sizeof(U16), *samplesInFile, file);
     printf("samplesRead = %lu\n", samplesRead);
     if(samplesRead < (size_t)(*samplesInFile)) 
@@ -99,7 +117,10 @@ int imos_rawDatReadAll(const char* fileName,
         perror("Error: file contains less sound data than expected from header");
         return 1;
     }
-    
+
+    /* Raw DAT files are uint16_t big-endian, need to correct for that */
+    swapBytes(data, samplesRead);
+
     /* read footer / marker lines */
 
     i = 0;
@@ -130,7 +151,7 @@ int imos_rawDatReadAll(const char* fileName,
 int imos_rawDatRead(const char* fileName,
     unsigned int samplesHeader,
     char** header,
-    I16* data)
+    U16* data)
 {
     FILE *file = fopen(fileName, "r");
     if (file == NULL) {
@@ -152,16 +173,19 @@ int imos_rawDatRead(const char* fileName,
     
     size_t samplesRead = fread(data, sizeof(U16), samplesHeader, file);
     fclose(file);
+
     printf("samplesRead = %d\n", (int)samplesRead);
     if(samplesRead < samplesHeader) 
     {
         perror("Error: file contains less sound data than expected from header");
         return -1;
     }
-    
+
+    /* Raw DAT files are uint16_t big-endian, need to correct for that */
+    swapBytes(data, samplesRead);
+
     return((int)samplesRead);
 }
-
 
 int writeWAV(const char* fileName, 
     unsigned int sampleRate,
@@ -194,7 +218,7 @@ int writeWAV(const char* fileName,
     printf("sampleRate = %d   durationSeconds = %d\n", sampleRate, timeSeconds);
 
 
-    printf("in write, fixed befor write_short    ");
+    printf("in write, fixed before write_short    ");
     sfinfo.frames		= (timeSeconds * sampleRate);
 	printf("sfinfo.frames = %d\n", (int)(sfinfo.frames));
     printf("sfinfo.channels * sfinfo.frames = %d\n", (int)(sfinfo.channels * sfinfo.frames));    
@@ -242,19 +266,22 @@ int main(int argc, const char ** argv)
         exit(1);
     }
 
-    I16* sound = (I16*)malloc(numSamplesHeader * sizeof(I16));
-    size_t allSize = malloc_usable_size((void*)sound);
+    U16* rawSound = (U16*)malloc(numSamplesHeader * sizeof(U16));
+    size_t allSize = malloc_usable_size((void*)rawSound);
     printf("allocated size = %d\n", (int)allSize);
 
-     numSoundSamples = imos_rawDatRead("54842511.DAT", numSamplesHeader, headerLines, sound);
+    numSoundSamples = imos_rawDatRead("54842511.DAT", numSamplesHeader, headerLines, rawSound);
     if(numSoundSamples == numSamplesHeader)
     {
         retval = 0;
     }
 
-    #allSize = malloc_usable_size((void*)sound);
-    #printf("in main() allocated size = %d\n", (int)allSize);
+    I16* sound = (I16*)malloc(numSamplesHeader * sizeof(I16));
     
+    /* convert to signed integer */
+    convertU16ToI16(rawSound, sound, numSoundSamples);
+    free(rawSound);
+
     unsigned int sampleRate = 0;
     unsigned int durationSeconds = 0;
 
@@ -265,6 +292,7 @@ int main(int argc, const char ** argv)
         sampleRate,
         durationSeconds,
         sound);
+    free(sound);
 
     exit(retval);
 }
