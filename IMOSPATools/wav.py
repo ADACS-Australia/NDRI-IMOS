@@ -16,7 +16,7 @@ class IMOSAcousticWavException(Exception):
 @dataclass
 class WavMetadataEssential:
     numChannels: int = 1
-    sampleRate: int = -1 
+    sampleRate: int = -1
     durationHeader: int = 0
     startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
