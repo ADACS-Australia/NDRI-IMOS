@@ -172,7 +172,7 @@ if __name__ == "__main__":
         else:
             logMsg = "Something went wrong, there is no audio signal data to write to wav file."
             log.error(logMsg)
-    else: 
+    else:
         # Do not calibrate, just convert the audio record file format 
         if binData is not None:
             # Cannot just save binary data blob to wave,
