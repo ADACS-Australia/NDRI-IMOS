@@ -1,11 +1,8 @@
 import wave
 import numpy
 import logging
-from mutagen.wave import WAVE
-from mutagen import MutagenError
 from datetime import datetime, timezone
 from dataclasses import dataclass, asdict
-import json
 
 from IMOSPATools import rawdat
 
@@ -118,45 +115,3 @@ def writeMono16bit(wavFileName: str,
 #            logMsg = f"Error writing metadata at the end of audio file {wavFileName}"
 #            log.error(logMsg + f"\nException {e}")
 #            raise IMOSAcousticWavException(logMsg)
-
-
-
-# the following is an experimental code that actually does not work 
-# with the standard python wav library.
-# Eventually decided to use soundfile library instead (see apudiofile.py)
-def addIMOSMetadata(wavFileName: str, metadataStruct: WavMetadataEssential):
-    """
-    Generate the wav filename from raw DAT file
-
-    Micro$oft wave format does not support custom metadata.
-    the workaround is: Format metadata into a json string
-    and write that into wav as a text comment
-
-    :param rawFileName: filename of the raw (DAT) file from which the vav filename shall be derived
-    :return: filename of the wav file name 
-    """
-    try:
-        audio = WAVE(wavFileName)
-        # Convert the dataclass instance to a dictionary
-        metadataDict = asdict(metadataStruct)
-
-        for key, value in metadataDict.items():
-            # Convert the value to a string
-            metadataDict[key] = str(value)
-
-        # #Serialize the metadata dictionary to a JSON
-        # metadataJson = json.dumps(metadataDict)
-        # #Add the JSON string as a single custom tag
-        # metadataJsonString = json.dumps(metadataJson)
-
-        # Serialize the metadata dictionary to a JSON string
-        metadataJsonString = json.dumps(metadataDict)
-
-        # wav.setcomment(metadata_json.encode('utf-8'))
-        audio.add_tags()
-        audio.tags['IMOS_metadata'] = metadataJsonString
-        audio.save()
-    except (FileNotFoundError, IOError, MutagenError) as e:
-        logMsg = f"An error occurred while adding metadata to the WAV file {wavFileName}"
-        log.error(logMsg + f"\nException {e}")
-        raise IMOSAcousticWavException(logMsg)
