@@ -123,7 +123,7 @@ def calib_dat2wavflac(rawFileName: str,
 
     param = 'Set ID'
     try:
-        setID = calib_params.get(param)
+        setID = int(calib_params.get(param))
     except:
         raise AssertionError(f"FAILED: extract calibration parameter \'{param}\' from file {calibParamsFileName}")
 
@@ -159,12 +159,18 @@ def calib_dat2wavflac(rawFileName: str,
     if scaledSignal is not None:
         try:
             # write calibrated wav file
-            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
-            audiofile.writeMono16bit(wavFileName, scaledSignal,
+            outputFileName = audiofile.createOutputFileName(metadata.setID,
+                                                            metadata.startTime,
+                                                            'wav')
+            outputPath = os.path.dirname(rawFileName) + '/' + outputFileName
+            audiofile.writeMono16bit(outputPath, scaledSignal,
                                      metadata)
             # write calibrated flac file
-            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
-            audiofile.writeMono16bit(wavFileName, scaledSignal,
+            outputFileName = audiofile.createOutputFileName(metadata.setID,
+                                                            metadata.startTime,
+                                                            'flac')
+            outputPath = os.path.dirname(rawFileName) + '/' + outputFileName
+            audiofile.writeMono16bit(outputPath, scaledSignal,
                                      metadata, 'FLAC')
         except:
             raise AssertionError(f"FAILED: write wave file {wavFileName}")
@@ -243,7 +249,7 @@ def calib_real_dat2wavflac(rawFileName: str,
 
     param = 'Set ID'
     try:
-        setID = calib_params.get(param)
+        setID = int(calib_params.get(param))
     except:
         raise AssertionError(f"FAILED: extract calibration parameter \'{param}\' from file {calibParamsFileName}")
 
@@ -279,12 +285,18 @@ def calib_real_dat2wavflac(rawFileName: str,
     if scaledSignal is not None:
         try:
             # write calibrated wav file
-            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
-            audiofile.writeMono16bit(wavFileName, scaledSignal,
+            outputFileName = audiofile.createOutputFileName(metadata.setID,
+                                                            metadata.startTime,
+                                                            'wav')
+            outputPath = os.path.dirname(rawFileName) + '/' + outputFileName
+            audiofile.writeMono16bit(outputPath, scaledSignal,
                                      metadata)
             # write calibrated flac file
-            wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
-            audiofile.writeMono16bit(wavFileName, scaledSignal,
+            outputFileName = audiofile.createOutputFileName(metadata.setID,
+                                                            metadata.startTime,
+                                                            'flac')
+            outputPath = os.path.dirname(rawFileName) + '/' + outputFileName
+            audiofile.writeMono16bit(outputPath, scaledSignal,
                                      metadata, 'FLAC')
         except:
             raise AssertionError(f"FAILED: write wave file {wavFileName}")
