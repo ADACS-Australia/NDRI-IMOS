@@ -74,16 +74,21 @@ def calib_dat2wavflac(rawFileName: str,
     try:
         binData, numChannels, sampleRate, durationHeader, \
             startTime, endTime = rawdat.readRawFile(rawFileName)
-    except:
+    except rawdat.IMOSAcousticRAWReadException:
         raise AssertionError(f"FAILED: read raw DAT file {rawFileName}")
 
     try:
-        essentialMetadata = audiofile.MetadataEssential(
+        durationFile = binData.size / sampleRate
+        setID = 2
+
+        metadata = audiofile.MetadataFull(
+            setID=setID,
             numChannels=numChannels,
             sampleRate=sampleRate,
             durationHeader=durationHeader,
+            durationFile=durationFile,
             startTime=startTime,
-            endTime=endTime
+            endTime=endTime,
         )
     except:
         raise AssertionError(f"FAILED: extract essential metadata from the header of raw DAT file {rawFileName}")
@@ -116,6 +121,16 @@ def calib_dat2wavflac(rawFileName: str,
     except:
         raise AssertionError(f"FAILED: extract calibration parameter \'{param}\' from file {calibParamsFileName}")
 
+    param = 'Set ID'
+    try:
+        setID = calib_params.get(param)
+    except:
+        raise AssertionError(f"FAILED: extract calibration parameter \'{param}\' from file {calibParamsFileName}")
+
+    metadata.calibNoiselevel = cnl
+    metadata.hydrophoneSensitivity = hs
+    metadata.setID = setID
+
     # read and pre-process calibration audio record
     try:
         calSpec, calFreq, calSampleRate = calibration.loadPrepCalibFile(calibFileName, cnl, hs)
@@ -131,7 +146,7 @@ def calib_dat2wavflac(rawFileName: str,
         volts = calibration.toVolts(binData)
         calibratedSignal = calibration.calibrate(volts, cnl, hs, calSpec, calFreq, sampleRate)
         scaledSignal, scaleFactor = calibration.scale(calibratedSignal)
-
+        metadata.scaleFactor = scaleFactor
     except:
         raise AssertionError(f"FAILED: calibrate and scale audio file {rawFileName}")
 
@@ -146,11 +161,11 @@ def calib_dat2wavflac(rawFileName: str,
             # write calibrated wav file
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
             audiofile.writeMono16bit(wavFileName, scaledSignal,
-                                     essentialMetadata)
+                                     metadata)
             # write calibrated flac file
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
             audiofile.writeMono16bit(wavFileName, scaledSignal,
-                                     essentialMetadata, 'FLAC')
+                                     metadata, 'FLAC')
         except:
             raise AssertionError(f"FAILED: write wave file {wavFileName}")
     else:
@@ -179,16 +194,21 @@ def calib_real_dat2wavflac(rawFileName: str,
     try:
         binData, numChannels, sampleRate, durationHeader, \
             startTime, endTime = rawdat.readRawFile(rawFileName)
-    except:
+    except rawdat.IMOSAcousticRAWReadException:
         raise AssertionError(f"FAILED: read raw DAT file {rawFileName}")
 
     try:
-        essentialMetadata = audiofile.MetadataEssential(
+        durationFile = binData.size / sampleRate
+        setID = 1
+
+        metadata = audiofile.MetadataFull(
+            setID=setID,
             numChannels=numChannels,
             sampleRate=sampleRate,
             durationHeader=durationHeader,
+            durationFile=durationFile,
             startTime=startTime,
-            endTime=endTime
+            endTime=endTime,
         )
     except:
         raise AssertionError(f"FAILED: extract essential metadata from the header of raw DAT file {rawFileName}")
@@ -221,6 +241,16 @@ def calib_real_dat2wavflac(rawFileName: str,
     except:
         raise AssertionError(f"FAILED: extract calibration parameter \'{param}\' from file {calibParamsFileName}")
 
+    param = 'Set ID'
+    try:
+        setID = calib_params.get(param)
+    except:
+        raise AssertionError(f"FAILED: extract calibration parameter \'{param}\' from file {calibParamsFileName}")
+
+    metadata.calibNoiselevel = cnl
+    metadata.hydrophoneSensitivity = hs
+    metadata.setID = setID
+
     # read and pre-process calibration audio record
     try:
         calSpec, calFreq, calSampleRate = calibration.loadPrepCalibFile(calibFileName, cnl, hs)
@@ -236,7 +266,7 @@ def calib_real_dat2wavflac(rawFileName: str,
         volts = calibration.toVolts(binData)
         calibratedSignal = calibration.calibrateReal(volts, cnl, hs, calSpec, calFreq, sampleRate)
         scaledSignal, scaleFactor = calibration.scale(calibratedSignal)
-
+        metadata.scaleFactor = scaleFactor
     except:
         raise AssertionError(f"FAILED: calibrate and scale audio file {rawFileName}")
 
@@ -251,11 +281,11 @@ def calib_real_dat2wavflac(rawFileName: str,
             # write calibrated wav file
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'wav')
             audiofile.writeMono16bit(wavFileName, scaledSignal,
-                                     essentialMetadata)
+                                     metadata)
             # write calibrated flac file
             wavFileName = audiofile.deriveOutputFileName(rawFileName, 'flac')
             audiofile.writeMono16bit(wavFileName, scaledSignal,
-                                     essentialMetadata, 'FLAC')
+                                     metadata, 'FLAC')
         except:
             raise AssertionError(f"FAILED: write wave file {wavFileName}")
     else:

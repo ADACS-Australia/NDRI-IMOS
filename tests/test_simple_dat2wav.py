@@ -26,7 +26,7 @@ def simple_dat2wav(rawFileName: str) -> bool:
     try:
         binData, numChannels, sampleRate, durationHeader, \
             startTime, endTime = rawdat.readRawFile(rawFileName)
-    except:
+    except rawdat.IMOSAcousticRAWReadException:
         raise AssertionError(f"FAILED: read raw DAT file {rawFileName}")
 
     # debugging...
@@ -46,7 +46,7 @@ def simple_dat2wav(rawFileName: str) -> bool:
             # write normalised scaled but still raw uncalibrated data into a wav file
             wavFileName = wav.deriveWavFileName(rawFileName)
             wav.writeMono16bit(wavFileName, sampleRate, scaledSignalInt16)
-        except:
+        except rawdat.IMOSAcousticRAWReadException:
             raise AssertionError(f"FAILED: normalise and write wave file {wavFileName}")
     else:
         logMsg = "Something went wrong, there is no audio signal data to write to a wav file."
