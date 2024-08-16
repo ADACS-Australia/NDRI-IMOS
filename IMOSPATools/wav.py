@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timezone
 from dataclasses import dataclass, asdict
 
-from IMOSPATools import rawdat
+from . import rawdat
 
 log = logging.getLogger('IMOSPATools')
 

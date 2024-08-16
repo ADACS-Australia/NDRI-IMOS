@@ -3,7 +3,7 @@ import scipy
 import logging
 from typing import Final
 
-from IMOSPATools import rawdat
+from . import rawdat
 # from IMOSPATools import diagplot
 
 OVERLOAD_LOWER_BOUND: Final[int] = 50
