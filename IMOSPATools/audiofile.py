@@ -92,7 +92,6 @@ def writeMono16bit(fileName: str, binData: numpy.ndarray,
                    fileFormat='WAV') -> None:
     """
     Write audio signal data into a MS wave file
-    !@#$%^& TODO use the struct values rather than extra param sampleRate
 
     :param fileName: filename of the output audio file
     :param sampleRate: sampling rate
@@ -139,8 +138,12 @@ def writeMono16bit(fileName: str, binData: numpy.ndarray,
 
 
 def detectAudioFormat(fileName: str) -> str:
-    # Detect whether it is WAVE or FLAC file.
+    """
+    Detect whether file corresponding to fileName is WAVE or FLAC file.
 
+    :param fileName: filename of the audio file
+    :return: string "WAVE", "FLAC" or "Unknown format"
+    """
     # Read the first 12 bytes of the file
     with open(fileName, 'rb') as file:
         header = file.read(12)
@@ -158,6 +161,13 @@ def detectAudioFormat(fileName: str) -> str:
 
 
 def extractMetadataStr(fileName: str) -> str:
+    """
+    Extract IMOS metadata as string from tag ICMT (.wav)
+    or comment (.flac)
+
+    :param fileName: filename of the audio file
+    :return: meta data in text form, shall be a Json string
+    """
     # Define the regular expression pattern to find the JSON-like structure
     regexp_ICMT = r'ICMT\s*:\s*({.*?})'
     regexp_comment = r'comment\s*:\s*({.*?})'
@@ -193,6 +203,13 @@ def extractMetadataStr(fileName: str) -> str:
 
 
 def extractMetadataJson(fileName: str):
+    """
+    Extract IMOS metadata as python object json from tag ICMT (.wav)
+    or comment (.flac)
+
+    :param fileName: filename of the audio file
+    :return: Json metadata object as returned by json.loads()
+    """
     jsonStr = extractMetadataStr(fileName)
     try:
         # Parse the JSON string
@@ -205,6 +222,13 @@ def extractMetadataJson(fileName: str):
 
 
 def extractMetadataStruct(fileName: str) -> MetadataEssential:
+    """
+    Extract IMOS metadata as python object json from tag ICMT (.wav)
+    or comment (.flac)
+
+    :param fileName: filename of the audio file
+    :return: MetadataEssential - Json metadata dataclass (python struct)
+    """
     metadataJson = extractMetadataJson(fileName)
     try:
         metadataDict = json.loads(jsonStr)
@@ -230,6 +254,14 @@ def extractMetadataStruct(fileName: str) -> MetadataEssential:
 
 
 def loadInspect(fileName: str) -> soundfile.SoundFile:
+    """
+    Load IMOS audio record (wav or flac) and print
+    information from the wav file header.
+
+    :param fileName: filename of the audio file
+    :return: soundfile.SoundFile - open sound file, ready
+             for further read/manipulation
+    """
     try:
         with soundfile.SoundFile(fileName, mode='r') as sf:
             signal = sf.read()
