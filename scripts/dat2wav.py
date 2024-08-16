@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     binData, numChannels, sampleRate, durationHeader, \
         startTime, endTime = rawdat.readRawFile(rawFileName)
-    
+
     durationFile = binData.size / sampleRate
 
     metadata = audiofile.MetadataFull(
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     elif args.output is not None:
         # explicitly specified output filename using commandline parameter
         outputFileName = args.output
-    else:    
+    else:
         outputFileName = audiofile.deriveOutputFileName(rawFileName, args.format) 
 
     numOverloadedSamples = calibration.countOverload(binData)
