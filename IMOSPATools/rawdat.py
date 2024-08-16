@@ -3,7 +3,6 @@ import os
 import numpy
 from datetime import datetime, timedelta, timezone
 from typing import Tuple
-import _io
 import logging
 from typing import Final
 from dataclasses import dataclass, field
