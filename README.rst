@@ -5,7 +5,7 @@ IMOS PA Tools
 IMOS Passive Audio Tools
 -----------------------------------------------------------------
 
-* Free software: XXX License
+* Free software: GPL-3.0 License
 * Documentation: `https://github.com/ADACS-Australia/NDRI-IMOS/blob/master/doc/Documentation.rst <https://github.com/ADACS-Australia/NDRI-IMOS/blob/master/doc/Documentation.rst>`_
 * Repo: `https://github.com/ADACS-Australia/NDRI-IMOS <https://github.com/ADACS-Australia/NDRI-IMOS>`_
 
@@ -21,10 +21,15 @@ Python module for IMOS passive audio recordings. Supports following functionalit
 * the metadata is stored as json string in the "comment" ID3 tag.
 * the library provides functions to extract the metadata
 
+Notes: 
+
+* minimal dependencies (only numpy, scipy, soundfile, wave)
+* this python package as library is ready to be published on `PyPI <https://pypi.org/>`_
+
 Credits
 -------
 
-Based on matlab code modules of CHORUS software by Alexander N. Gavrilov.
+Based on matlab code modules of CHORUS software written by Alexander N. Gavrilov.
 
 `Gavrilov A.N. and Parsons M.J.G. (2014), “A MATLAB tool for the Characterisation Of Recorded Underwater Sound (CHORUS)”, Acoustics Australia v.42, No.3, pp. 190-196. <http://www.acoustics.asn.au/journal/Vol42No3-LOWRES.pdf>`_
 

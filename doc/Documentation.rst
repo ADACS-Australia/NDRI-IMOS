@@ -100,19 +100,21 @@ of normalised calibrated signal.
 Technical notes
 ----------------
 
-The code is based on commonly used Python libraries included in packages numpy and scipy. 
+The code is based on commonly used Python libraries included in packages numpy and scipy.
 Scipy as of 07/2024 does not support Python versions later than 3.9 and this fact
-restricts the usavilit of this code to the same Python version.
+restricts the usability of this code to the same Python version.
 
 The Butterworth high pass filter introduces frequency dependant phase delay. This is 
 compensated by using forward-backward filtering, as this calibration is post-processing,
-rather than being done in real-time. In the scipy implementation, the initial approx 0.1s
+rather than real-time operation. In the scipy implementation, the initial approx 0.1s
 at the beginning of the calibrated audio record has a bit of artefact visible when 
-inspecting the waveform, which is not present in the matlab implementation. After 
-appox 0.2 s this fades out completely and is not noticeable.
+inspecting the waveform, which is not present when using the matlab implementation.
+After approx 0.2s this fades out completely and is not noticeable.
 
 The fast fourier transformation eventually used in the code is "real signal" FFT, which
 ensures that no numerical residuals of complex component need to be explicitly removed 
 from the product of inverse FFT.
 
-
+Based on consultation with an expert who has extensive experience with the actual dataset, 
+this library supports only single channel passive audio records - simple because there are
+no multi channel data files.
