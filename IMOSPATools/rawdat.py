@@ -74,6 +74,7 @@ class RAWFileFooter:
 
 log = logging.getLogger('IMOSPATools')
 
+
 class IMOSAcousticRAWReadException(Exception):
     pass
 
