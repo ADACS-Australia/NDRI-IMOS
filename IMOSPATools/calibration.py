@@ -13,6 +13,7 @@ FULLSCALE_VOLTS: Final[float] = 5.0
 log = logging.getLogger('IMOSPATools')
 doWriteIntermediateResults = False
 
+
 class IMOSAcousticCalibException(Exception):
     pass
 
