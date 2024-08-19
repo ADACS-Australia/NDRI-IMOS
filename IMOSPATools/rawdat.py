@@ -1,3 +1,4 @@
+# This is needed for python 3.8 - 3.9+ is okay
 from __future__ import annotations
 
 import re
