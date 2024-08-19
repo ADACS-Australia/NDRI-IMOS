@@ -117,7 +117,7 @@ if __name__ == "__main__":
         durationFile=durationFile,
         startTime=startTime,
         endTime=endTime,
-        calibNoiselevel=args.noise,
+        calibNoiseLevel=args.noise,
         hydrophoneSensitivity=args.sensitivity
     )
 

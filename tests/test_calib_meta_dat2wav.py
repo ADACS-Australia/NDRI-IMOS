@@ -137,7 +137,7 @@ def calib_dat2wavflac(rawFileName: str,
     except:
         raise AssertionError(f"FAILED: extract calibration parameter \'{param}\' from file {calibParamsFileName}")
 
-    metadata.calibNoiselevel = cnl
+    metadata.calibNoiseLevel = cnl
     metadata.hydrophoneSensitivity = hs
     metadata.setID = setID
 
@@ -272,7 +272,7 @@ def calib_real_dat2wavflac(rawFileName: str,
     except:
         raise AssertionError(f"FAILED: extract calibration parameter \'{param}\' from file {calibParamsFileName}")
 
-    metadata.calibNoiselevel = cnl
+    metadata.calibNoiseLevel = cnl
     metadata.hydrophoneSensitivity = hs
     metadata.setID = setID
 
