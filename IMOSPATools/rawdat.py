@@ -99,7 +99,7 @@ def convertHeaderTime(line: str, timeLabel: str) -> datetime:
         return False
     match = re.search(REGEXP_SUBSECONDS, line)
     if match:
-        dateTime += timedelta(seconds=float(match[1])/(float)(1<<16))
+        dateTime += timedelta(seconds=float(match[1])/(float)(1 << 16))
         log.info(f"\'{timeLabel}\' timestamp is: {dateTime}")
     else:
         logMsg = f"\'{timeLabel}\' timestamp sub-seconds not found in Footer of file {file.name}. File corrupted?"
