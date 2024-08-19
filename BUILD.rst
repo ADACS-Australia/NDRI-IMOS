@@ -57,5 +57,7 @@ The IMOS passive audio tools library is wrapped in a python package named IMOSPA
 
       from IMOSPATools import ...
 
+   .. ::
+
    (See `dat2wav.py <scripts/dat2wav.py>`_.)
 

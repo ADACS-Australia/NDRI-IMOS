@@ -80,7 +80,7 @@ Commandline tools
 
 * inspect_audio_record.py
     commandline script that read the wav or flac file 
-    and prints various information on the data recorrd,
+    and prints various information on the data record,
     including IMOS meta data (if included in the file).
    
 Testing
@@ -88,7 +88,9 @@ Testing
 Automated end-to-end integration test using pytest is included in the github repo.
 All test* functions in code modules matching pattern test*.py in sub-folder 'tests' 
 are automatically executed in Python 3.8.latest and 3.9.latest on Github when 
-git push or pull request actions are taken.
+git push or pull request actions are taken. This is implemented as github action,
+and the tests run in the free github cloud. The same test can be executed locally 
+as well, by running 'pytest' in the root of this github repoitory.
 
 Verification
 ------------
@@ -96,6 +98,14 @@ Jupyter notebooks calling IMOAPATools library combined with code copied from the
 calibration module are used to verify the correctness of the calibration, compared 
 to the product of the reference implementation. The comparison is done at the stage 
 of normalised calibrated signal.
+
+Metadata
+--------
+Example of metadata written to the output files:
+
+.. code-block::
+{'setID': '3154', 'schedule': '2012-08-17 02:45:01.322479', 'numChannels': '1', 'sampleRate': '6000.0', 'durationHeader': '300.0', 'durationFile': '307.0373333333333', 'startTime': '2012-08-17 02:45:01.337646', 'endTime': '2012-08-17 02:50:08.374979', 'calibNoiseLevel': '0.0', 'hydrophoneSensitivity': '-197.8', 'scaleFactor': '10000000.0'}
+.. ::
 
 Technical notes
 ----------------
@@ -116,5 +126,5 @@ ensures that no numerical residuals of complex component need to be explicitly r
 from the product of inverse FFT.
 
 Based on consultation with an expert who has extensive experience with the actual dataset, 
-this library supports only single channel passive audio records - simple because there are
+this library supports only single channel passive audio records - simply because there are
 no multi channel data files.
