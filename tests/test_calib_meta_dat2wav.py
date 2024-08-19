@@ -74,7 +74,7 @@ def calib_dat2wavflac(rawFileName: str,
 
     try:
         binData, numChannels, sampleRate, durationHeader, \
-            startTime, endTime = rawdat.readRawFile(rawFileName)
+            startTime, endTime, scheduleTime = rawdat.readRawFile(rawFileName)
     except rawdat.IMOSAcousticRAWReadException:
         raise AssertionError(f"FAILED: read raw DAT file {rawFileName}")
 
@@ -92,6 +92,7 @@ def calib_dat2wavflac(rawFileName: str,
 
         metadata = audiofile.MetadataFull(
             setID=setID,
+            schedule=scheduleTime,
             numChannels=numChannels,
             sampleRate=sampleRate,
             durationHeader=durationHeader,
@@ -208,7 +209,7 @@ def calib_real_dat2wavflac(rawFileName: str,
 
     try:
         binData, numChannels, sampleRate, durationHeader, \
-            startTime, endTime = rawdat.readRawFile(rawFileName)
+            startTime, endTime, scheduleTime = rawdat.readRawFile(rawFileName)
     except rawdat.IMOSAcousticRAWReadException:
         raise AssertionError(f"FAILED: read raw DAT file {rawFileName}")
 
@@ -226,6 +227,7 @@ def calib_real_dat2wavflac(rawFileName: str,
 
         metadata = audiofile.MetadataFull(
             setID=setID,
+            schedule=scheduleTime,
             numChannels=numChannels,
             sampleRate=sampleRate,
             durationHeader=durationHeader,

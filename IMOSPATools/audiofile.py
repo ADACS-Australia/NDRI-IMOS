@@ -46,7 +46,7 @@ class MetadataFull:
     # calibration noise level - as provided for calibration
     # -90 seems to be the most common value of calibration noise level
     # 0.0 means not calibrated
-    calibNoiselevel: float = 0.0
+    calibNoiseLevel: float = 0.0
     # hydrophone sensitivity - as provided for calibration
     # -196 seems to be the most common value of hydrophone sensitivity
     hydrophoneSensitivity: float = -196

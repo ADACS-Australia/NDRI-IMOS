@@ -25,7 +25,7 @@ def simple_dat2wav(rawFileName: str) -> bool:
 
     try:
         binData, numChannels, sampleRate, durationHeader, \
-            startTime, endTime = rawdat.readRawFile(rawFileName)
+            startTime, endTime, scheduleTime = rawdat.readRawFile(rawFileName)
     except rawdat.IMOSAcousticRAWReadException:
         raise AssertionError(f"FAILED: read raw DAT file {rawFileName}")
 

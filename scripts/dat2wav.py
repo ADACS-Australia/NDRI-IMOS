@@ -97,7 +97,7 @@ if __name__ == "__main__":
         setID = 0
 
     binData, numChannels, sampleRate, durationHeader, \
-        startTime, endTime = rawdat.readRawFile(rawFileName)
+        startTime, endTime, scheduleTime = rawdat.readRawFile(rawFileName)
 
     durationFile = binData.size / sampleRate
 
@@ -110,6 +110,7 @@ if __name__ == "__main__":
 
     metadata = audiofile.MetadataFull(
         setID=setID,
+        schedule=scheduleTime,
         numChannels=numChannels,
         sampleRate=sampleRate,
         durationHeader=durationHeader,

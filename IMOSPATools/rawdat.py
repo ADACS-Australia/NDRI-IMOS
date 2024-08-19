@@ -110,19 +110,21 @@ def convertHeaderTime(line: str, timeLabel: str) -> datetime:
     return dateTime
 
 
-def readRawHeaderEssentials(file: _io.BufferedReader) -> Tuple[int, float, float]:
+def readRawHeaderEssentials(file: _io.BufferedReader) -> tuple[int, float, float, datetime]:
     """
     Read essential parameters from RAW file header
     Assumes file is already open!
 
     :param file: already open file
-    :return: number of channels, sampling rate, record duration
+    :return: number of channels, sampling rate, record duration, schedule time
     """
     header = []
     for lineNum in range(0, NUM_LINES_HEADER):
         line = file.readline()
         log.debug(f'{lineNum} {line}')
         header.append(line.decode("utf-8"))
+
+    scheduleTime = convertHeaderTime(header[1], 'Schedule')
 
     regExp = r"Sample Rate (\d+) Duration (\d+)"
     match = re.match(regExp, header[2])
@@ -164,7 +166,7 @@ def readRawHeaderEssentials(file: _io.BufferedReader) -> Tuple[int, float, float
         log.error(logMsg)
         raise IMOSAcousticRAWReadException(logMsg)
 
-    return numCh, rate, duration
+    return numCh, rate, duration, scheduleTime
 
 
 def readRawBinData(file: _io.BufferedReader,
@@ -255,7 +257,7 @@ def readRawTimesFromFooter(file: _io.BufferedReader,
     return startTime, endTime
 
 
-def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, datetime):
+def readRawFile(fileName: str) -> tuple[numpy.ndarray, int, float, float, datetime, datetime, datetime]:
     """
     Read RAW file
 
@@ -273,7 +275,7 @@ def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, d
 
     with open(fileName, 'rb') as file:
         try:
-            numChannels, sampleRate, durationHeader = readRawHeaderEssentials(file)
+            numChannels, sampleRate, durationHeader, scheduleTime = readRawHeaderEssentials(file)
         except IMOSAcousticRAWReadException as e:
             logMsg = f"Error reading header from {fileName}"
             log.error(logMsg + f"\nException {e}")
@@ -304,4 +306,4 @@ def readRawFile(fileName: str) -> (numpy.ndarray, int, float, float, datetime, d
 
         log.debug(f'Done reading raw DAT audio file {fileName}')
 
-        return binData, numChannels, sampleRate, durationHeader, startTime, endTime
+        return binData, numChannels, sampleRate, durationHeader, startTime, endTime, scheduleTime

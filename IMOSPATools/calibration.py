@@ -75,7 +75,7 @@ def loadPrepCalibFile(fileName: str,
     :return: sampling rate
     """
     calBinData, numChannels, sampleRate, durationHeader, \
-        startTime, endTime = rawdat.readRawFile(fileName)
+        startTime, endTime, scheduleTime = rawdat.readRawFile(fileName)
 
     # debugging...
     log.debug(f"Calibration data size is: {calBinData.size}")
