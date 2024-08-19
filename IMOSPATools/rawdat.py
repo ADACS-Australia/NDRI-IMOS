@@ -1,3 +1,4 @@
+import sys
 import re
 import os
 import numpy
@@ -7,6 +8,9 @@ import _io
 import logging
 from typing import Final
 from dataclasses import dataclass, field
+
+if sys.version_info < (3, 9):
+    from __future__ import annotations
 
 # --- Example header ---
 #   Record Header-       E24 set# 3444
@@ -275,7 +279,8 @@ def readRawFile(fileName: str) -> tuple[numpy.ndarray, int, float, float, dateti
 
     with open(fileName, 'rb') as file:
         try:
-            numChannels, sampleRate, durationHeader, scheduleTime = readRawHeaderEssentials(file)
+            numChannels, sampleRate, durationHeader, \
+                scheduleTime = readRawHeaderEssentials(file)
         except IMOSAcousticRAWReadException as e:
             logMsg = f"Error reading header from {fileName}"
             log.error(logMsg + f"\nException {e}")
