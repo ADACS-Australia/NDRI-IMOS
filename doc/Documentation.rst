@@ -101,13 +101,14 @@ of normalised calibrated signal.
 
 Metadata
 --------
+The metadata is stored as a Json string in the "comment" ID3 tag (in case of flac format) or in ICMT tag (wav format). 
 Example of metadata written to the output files:
 
-.. code-block::
+    .. code-block::
 
-{'setID': '3154', 'schedule': '2012-08-17 02:45:01.322479', 'numChannels': '1', 'sampleRate': '6000.0', 'durationHeader': '300.0', 'durationFile': '307.0373333333333', 'startTime': '2012-08-17 02:45:01.337646', 'endTime': '2012-08-17 02:50:08.374979', 'calibNoiseLevel': '0.0', 'hydrophoneSensitivity': '-197.8', 'scaleFactor': '10000000.0'}
+    {'setID': '3154', 'schedule': '1970-01-01 00:00:00+00:00', 'numChannels': '1', 'sampleRate': '6000.0', 'durationHeader': '300.0', 'durationFile': '307.0373333333333', 'startTime': '2012-08-17 02:45:01.337646', 'endTime': '2012-08-17 02:50:08.616638', 'calibNoiselevel': '-90.0', 'hydrophoneSensitivity': '-197.8', 'scaleFactor': '10000000.0'}
 
-.. ::
+    .. ::
 
 Technical notes
 ----------------
