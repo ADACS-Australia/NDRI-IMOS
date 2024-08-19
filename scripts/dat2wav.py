@@ -1,6 +1,6 @@
 import argparse
 import os
-# from datetime import datetime
+from datetime import timedelta
 # from typing import Tuple
 # import _io
 import logging
@@ -100,6 +100,13 @@ if __name__ == "__main__":
         startTime, endTime = rawdat.readRawFile(rawFileName)
 
     durationFile = binData.size / sampleRate
+
+    log.debug(f'endTime from .DAT file header: {endTime}')
+    # cannot just add seconds - timedelta object has to be constructed
+    durationTimedelta = timedelta(seconds=durationFile)
+    log.debug(f'duration timedelta calculated from actual audio record duration: {durationTimedelta}')
+    endTime = startTime + durationTimedelta
+    log.debug(f'endTime calculated from actual audio record duration: {endTime}')
 
     metadata = audiofile.MetadataFull(
         setID=setID,

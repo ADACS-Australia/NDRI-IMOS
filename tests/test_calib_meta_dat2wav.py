@@ -2,6 +2,7 @@ import os
 import logging
 import numpy
 import wave
+from datetime import timedelta
 
 from IMOSPATools import rawdat
 from IMOSPATools import wav
@@ -79,6 +80,14 @@ def calib_dat2wavflac(rawFileName: str,
 
     try:
         durationFile = binData.size / sampleRate
+
+        log.debug(f'endTime from .DAT file header: {endTime}')
+        # cannot just add seconds - timedelta object has to be constructed
+        durationTimedelta = timedelta(seconds=durationFile)
+        log.debug(f'duration timedelta calculated from actual audio record duration: {durationTimedelta}')
+        endTime = startTime + durationTimedelta
+        log.debug(f'endTime calculated from actual audio record duration: {endTime}')
+
         setID = 2
 
         metadata = audiofile.MetadataFull(
@@ -205,6 +214,14 @@ def calib_real_dat2wavflac(rawFileName: str,
 
     try:
         durationFile = binData.size / sampleRate
+
+        log.debug(f'endTime from .DAT file header: {endTime}')
+        # cannot just add seconds - timedelta object has to be constructed
+        durationTimedelta = timedelta(seconds=durationFile)
+        log.debug(f'duration timedelta calculated from actual audio record duration: {durationTimedelta}')
+        endTime = startTime + durationTimedelta
+        log.debug(f'endTime calculated from actual audio record duration: {endTime}')
+
         setID = 1
 
         metadata = audiofile.MetadataFull(
