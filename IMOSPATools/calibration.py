@@ -530,7 +530,7 @@ def scale(signal: numpy.ndarray) -> (numpy.ndarray, float):
     log.debug(f"Maximum abs amplitude of the calibrated signal before scaling: {numpy.max(numpy.abs(signal))}")
 
     # scaling as per Sasha's matlab code
-    scaleFactor = 10 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(signal))))
+    scaleFactor = 10.0 ** numpy.ceil(numpy.log10(numpy.max(numpy.abs(signal))))
     normalisedSignal = signal / scaleFactor
 
     log.info(f"Scale factor to reconstruct normalised signal is: {scaleFactor}")

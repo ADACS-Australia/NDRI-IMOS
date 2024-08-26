@@ -50,7 +50,7 @@ class MetadataFull:
     # hydrophone sensitivity - as provided for calibration
     # -196 seems to be the most common value of hydrophone sensitivity
     hydrophoneSensitivity: float = -196
-    scaleFactor: int = -1
+    scaleFactor: float = -1.0
 
 
 def deriveOutputFileName(rawFileName: str, ext: str) -> str:
