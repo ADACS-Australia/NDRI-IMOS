@@ -16,7 +16,7 @@ class IMOSAcousticAudioFileException(Exception):
 @dataclass
 class MetadataEssential:
     numChannels: int = 1
-    sampleRate: int = -1
+    sampleRate: int = 0
     # audio record duration as read from the DAT file header
     durationHeader: float = 0
     # actual duration of the audio record as stored in a file
@@ -24,14 +24,14 @@ class MetadataEssential:
     durationFile: float = 0
     startTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     endTime: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
-    scaleFactor: int = -1
+    scaleFactor: float = 1.0
 
 
 @dataclass
 class MetadataFull:
     # Where we get this SetID? database of records?
     # it is in some of the DAT file headers, but not in all of them
-    setID: int = -1
+    setID: int = 0
     # schedule number seems to be included in many DAT file headers
     schedule: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
     numChannels: int = 1
@@ -50,7 +50,7 @@ class MetadataFull:
     # hydrophone sensitivity - as provided for calibration
     # -196 seems to be the most common value of hydrophone sensitivity
     hydrophoneSensitivity: float = -196
-    scaleFactor: float = -1.0
+    scaleFactor: float = 1.0
 
 
 def deriveOutputFileName(rawFileName: str, ext: str) -> str:
