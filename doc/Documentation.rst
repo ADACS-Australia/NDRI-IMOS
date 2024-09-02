@@ -131,3 +131,8 @@ from the product of inverse FFT.
 Based on consultation with an expert who has extensive experience with the actual dataset, 
 this library supports only single channel passive audio records - simply because there are
 no multi channel data files.
+
+The input raw audio records have each sample encoded as uint16 big-endian.
+This is driven by the HW/firmware of the hydrophone sensor embedded system. 
+On little-endian Intel architecture (eg PC) the bytes of each 16-bit sample must be swapped.
+
